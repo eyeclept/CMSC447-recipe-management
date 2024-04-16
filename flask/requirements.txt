@@ -4,6 +4,7 @@ Flask-JWT-Extended
 flask-bcrypt
 flask-restful
 pymysql
+flask-restful
 sqlalchemy
 sqlalchemy-utils
 webargs
