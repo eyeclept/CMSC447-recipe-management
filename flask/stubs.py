@@ -1,17 +1,15 @@
-"""
-Taken from another branch ahead of time to have classes available
-"""
 import csv
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-
+from flask_restful import Api
 
 app = Flask(__name__)
 # Replace with the actual url to database
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///replace_me.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
+
 
 class User(db.Model):
     username = db.Column(db.String(255), primary_key=True, nullable=False)
@@ -40,7 +38,7 @@ class Favorite(db.Model):
     recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.recipe_id'))
 
 
-def stubbed_elasticsearch_call(**kwargs):
+def stubbed_elasticsearch_call(*args, **kwargs):
     """
     For now, placeholder function for ES
     """
