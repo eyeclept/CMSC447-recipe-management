@@ -44,5 +44,7 @@ def stubbed_elasticsearch_call(*args, **kwargs):
     """
     return {
         "key1": "value1",
-        "key2": "value2"
+        "key2": "value2",
+        "args": args,
+        "kwargs": kwargs
     }

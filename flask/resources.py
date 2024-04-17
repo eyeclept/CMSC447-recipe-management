@@ -3,7 +3,7 @@ from flask_restful import Resource
 import sqlalchemy
 from webargs import fields
 from webargs.flaskparser import use_kwargs
-
+from sqlalchemy import update
 from stubs import *
 
 class SearchRecipes(Resource):
@@ -25,8 +25,6 @@ class FavoriteRecipes(Resource):
         """
         pass
 
-
-    
     def post(self, username):
         """
         add a recipe to a user's favorites
@@ -46,25 +44,68 @@ class OwnRecipes(Resource):
         """
         get all ids of recipes created by user
         """
-        user:User = db.session.execute(db.select(User).filter_by(username=username)).scalar_one()
-        
-        for r in user.recipes:
-            print(r)
+        user:User = db.session.get(User, username)
 
-        return "abcd"
+        ids = []
+        for r in user.recipes:
+            ids.append(r.recipe_id)
+
+        return stubbed_elasticsearch_call(ids)
+
+
+    def post(self, username):
+        """
+        create a recipe
+        """
+        json_data = request.get_json(force=True)
+        id = json_data['recipe_id']
+        picture = None
+        if 'picture' in json_data:
+            picture = json_data['picture']
+        
+        recipe = Recipe(recipe_id=id, username=username, picture=picture)
+        db.session.add(recipe)
+        db.session.commit()
+
+        es = stubbed_elasticsearch_call(json_data)
+        es['id'] = id
+        return es
+
 
     def put(self, username):
         """
-        update/create a recipe
+        create a recipe
         """
-        pass
+        json_data = request.get_json(force=True)
+        id = json_data['recipe_id']
+        
+        if 'picture' in json_data:
+            db.session.execute(
+                update(Recipe),
+                [
+                    {
+                        'recipe_id': id,
+                        'picture': json_data['picture']
+                    }
+                ]
+            )
+            db.session.commit()
 
-    def delete(self, username):
+        es = stubbed_elasticsearch_call(json_data)
+        es['id'] = id
+        return es
+    
+    @use_kwargs({'recipe_id': fields.Integer()}, location="query")
+    def delete(self, username, **kwargs):
         """
         delete a recipe
         """
-        pass
+        es = stubbed_elasticsearch_call(kwargs)
 
+        recipe = db.session.get(Recipe, kwargs['recipe_id'])
+        db.session.delete(recipe)
+        db.session.commit()
+        return es
 
 class RateRecipe(Resource):
 
