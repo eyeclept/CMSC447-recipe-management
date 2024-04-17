@@ -2,6 +2,7 @@ import csv
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_restful import Api
+import random
 
 app = Flask(__name__)
 # Replace with the actual url to database
@@ -27,15 +28,13 @@ class Recipe(db.Model):
     favorites_1 = db.relationship('Favorite', backref='recipe')
 
 class Review(db.Model):
-    review_id = db.Column(db.Integer, primary_key=True, autoincrement=True, nullable=False)
-    username = db.Column(db.String(255), db.ForeignKey('user.username'))
-    recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.recipe_id'))
+    username = db.Column(db.String(255), db.ForeignKey('user.username'), primary_key=True)
+    recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.recipe_id'), primary_key=True)
     rating = db.Column(db.Boolean)
 
 class Favorite(db.Model):
-    favorite_id = db.Column(db.Integer, primary_key=True, autoincrement=True, nullable=False)
-    username = db.Column(db.String(255), db.ForeignKey('user.username'))
-    recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.recipe_id'))
+    username = db.Column(db.String(255), db.ForeignKey('user.username'), primary_key=True)
+    recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.recipe_id'), primary_key=True)
 
 
 def stubbed_elasticsearch_call(*args, **kwargs):
@@ -46,5 +45,6 @@ def stubbed_elasticsearch_call(*args, **kwargs):
         "key1": "value1",
         "key2": "value2",
         "args": args,
-        "kwargs": kwargs
+        "kwargs": kwargs,
+        "id": random.randint(20, 2000)
     }

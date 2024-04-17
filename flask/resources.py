@@ -23,19 +23,38 @@ class FavoriteRecipes(Resource):
         """
         get a list of the ids of a user's favorite recipes
         """
-        pass
+        user:User = db.session.get(User, username)
 
-    def post(self, username):
+        ids = []
+        for r in user.favorites:
+            ids.append(r.recipe_id)
+
+        return stubbed_elasticsearch_call(ids)
+
+    @use_kwargs({"recipe_id": fields.Integer(required=True)}, location="query")
+    def put(self, username, **kwargs):
         """
         add a recipe to a user's favorites
         """
-        pass
+        if db.session.get(Favorite, kwargs['recipe_id']):
+            return 200
+        
+        fav:Favorite = Favorite(username=username, recipe_id=kwargs['recipe_id'])
+        db.session.add(fav)
+        db.session.commit()
 
-    def delete(self, username):
+        return 200
+
+    @use_kwargs({"recipe_id": fields.Integer(required=True)}, location="query")
+    def delete(self, username, **kwargs):
         """
         remove a recipe from a user's favorites
         """
-        pass
+        fav = db.session.get(Favorite, {'username':username, 'recipe_id':kwargs['recipe_id']})
+        db.session.delete(fav)
+        db.session.commit()
+
+        return 200
 
 
 class OwnRecipes(Resource):
@@ -52,78 +71,91 @@ class OwnRecipes(Resource):
 
         return stubbed_elasticsearch_call(ids)
 
-
-    def post(self, username):
-        """
-        create a recipe
-        """
-        json_data = request.get_json(force=True)
-        id = json_data['recipe_id']
-        picture = None
-        if 'picture' in json_data:
-            picture = json_data['picture']
-        
-        recipe = Recipe(recipe_id=id, username=username, picture=picture)
-        db.session.add(recipe)
-        db.session.commit()
-
-        es = stubbed_elasticsearch_call(json_data)
-        es['id'] = id
-        return es
-
-
     def put(self, username):
         """
         create a recipe
         """
-        json_data = request.get_json(force=True)
-        id = json_data['recipe_id']
-        
-        if 'picture' in json_data:
-            db.session.execute(
-                update(Recipe),
-                [
-                    {
-                        'recipe_id': id,
-                        'picture': json_data['picture']
-                    }
-                ]
-            )
+        json_data:dict = request.get_json(force=True)
+
+        # if an id is passed, then the recipe must exist already
+        if id in json_data:
+            if 'picture' in json_data:
+                db.session.execute(
+                    update(Recipe),
+                    [
+                        {
+                            'recipe_id': id,
+                            'picture': json_data['picture']
+                        }
+                    ]
+                )
+                db.session.commit()
+        else:
+            # have to get the id from elasticsearch
+            es = stubbed_elasticsearch_call(json_data)
+            id = es['id']
+            picture = json_data.pop('picture', None)
+            recipe = Recipe(recipe_id=id, username=username, picture=picture)
+            db.session.add(recipe)
             db.session.commit()
 
-        es = stubbed_elasticsearch_call(json_data)
-        es['id'] = id
-        return es
+
+        return "done"
     
-    @use_kwargs({'recipe_id': fields.Integer()}, location="query")
+    @use_kwargs({'recipe_id': fields.Integer(required=True)}, location="query")
     def delete(self, username, **kwargs):
         """
         delete a recipe
         """
+        recipe = db.session.get(Recipe, kwargs['recipe_id'])
+        if not recipe:
+            return 200
         es = stubbed_elasticsearch_call(kwargs)
 
-        recipe = db.session.get(Recipe, kwargs['recipe_id'])
         db.session.delete(recipe)
         db.session.commit()
         return es
 
 class RateRecipe(Resource):
+    review_fields = {
+        'recipe_id': fields.Integer(required=True),
+        'username': fields.String(required=True),
+        'rating': fields.Boolean(required=False, default=True)
+    }
 
-    def get(self, username):
+    @use_kwargs({'recipe_id': fields.Integer(required=True)}, location="query")
+    def get(self, **kwargs):
         """
         get avg/total rating for a recipe (dunno how we're doing it)
         """
         pass
 
-    def put(self, username):
+    @use_kwargs(review_fields, location="query")
+    def put(self, **kwargs):
         """
         give a rating to a recipe
         """
-        pass
+        review:Review = db.session.get(Review, {'username':kwargs['username'], 'recipe_id':kwargs['recipe_id']})
+        if review:
+            review.rating = kwargs['rating']
+        else:
+            review = Review(username=kwargs['username'], recipe_id=kwargs['recipe_id'], rating=kwargs['rating'])
+            db.session.add(review)
 
-    def delete(self, username):
+        db.session.commit()
+        return 200
+
+
+    @use_kwargs(review_fields, location="query")
+    def delete(self, **kwargs):
         """
         delete recipe rating
         """
-        pass
+        review = db.session.get(Review, {'username':kwargs['username'], 'recipe_id':kwargs['recipe_id']})
+        if not review:
+            return 200
+        db.session.delete(review)
+        db.session.commit()
+
+        return 200
     
