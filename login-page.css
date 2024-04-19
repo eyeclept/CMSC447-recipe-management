@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body{
+    margin:0;
+    width:100%;
+    height:100%;
+    background-color:cadetBlue;
+}
+websiteName{
+    font-size:xx-large;
+}
+
+loginPage{
+    margin:0 auto;
+    text-align:center;
+    display:block;
+    padding-top:100px;
+
+    
+}
+
+labelLogin{
+    display:inline-block;
+    width:36.5vw;
+    text-align:right;
+}
+
+input{
+    width:25%;
+    
+    
+}
+button-wrapper{
+    text-align:center;
+    margin:0 auto;
+    display:block;
+}
+button{
+    
+    font-size:small;
+    padding:3px;
+    background-color:lightgrey;
+    border:1%;
+
+}
+</style>
+
+</head>
+<body>
+    <loginPage>
+    <websiteName>Website Name (TM)</websiteName>
+    </loginPage>
+    
+    <div>
+    <labelLogin>Username</labelLogin>
+    <input type=text></input>
+    <labelLogin>Password:</labelLogin>
+    <input type=password></input>
+    </div>
+    <div>
+        <button-wrapper>
+            <button>Login</button>
+            <button>Forgot?</button>
+        </button-wrapper>
+    </div>
+</body>
+</html>

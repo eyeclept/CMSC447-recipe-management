@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body{
+    margin:0;
+    width:100%;
+    height:100%;
+    background-color:cadetBlue;
+}
+
+.left-section{
+    float:left;
+    height:100vh;
+    width:30vw;
+    font-size:small;
+    text-align:center;
+}
+.center-section{
+    float:left;
+    width:67vw;
+    text-align:center;
+}
+
+.option-box{
+    width:30vw;
+    height:100vh;
+    background-color:lightgrey;
+}
+.option-buttons{
+    margin-bottom:5px;
+    width:30vw;
+    height:4vh;
+}
+.filter-button{
+    margin-bottom:0vh;
+    width:60vw;
+    height:5vh;
+}
+input[type=text]{
+    margin-top:10vh;
+    width:60vw;
+    height:5vh;
+}
+.account-options{
+    float:right;
+    text-align:right;
+    height:5vh;
+    font-size:x-small;
+}
+.browse-panel{
+    text-align:center;
+    border-width:medium;
+    border-color:black;
+    border-style:solid;
+    margin-top:15vh;
+    margin-left:3.25vw;
+    width:60vw;
+    height:50vh;
+    background-color:lightgrey;
+}
+.random-shown{
+    background-color:bisque;
+    width:15vw;
+    height:20vh;
+    margin-left:2.5vw;
+    margin-right:2.5vw;
+    margin-top:2.5vh;
+    margin-bottom:2.5vh;
+    float:left;
+}
+
+
+
+
+
+</style>
+
+</head>
+<body>
+    <div class=left-section>
+        <h2>Username</h2>
+        <div class=option-box>
+            <button class=option-buttons>Search</button>
+            <button class=option-buttons>My Recipes</button>
+            <button class=option-buttons>Favorites</button>
+        </div>
+    </div>
+    
+    <div class=center-section>
+        <button class=account-options>Sign In</button>
+        <button class=account-options>Sign Out</button>
+        
+        <div>
+        <input type=text></input>
+        <button class=filter-button>Filter Options</button>
+        </div>
+        
+        <div class=browse-panel>
+           <div>
+               <div class=random-shown>RECIPE 1</div>
+               <div class=random-shown>RECIPE 2</div>
+               <div class=random-shown>RECIPE 3</div>
+           </div>
+           <div>
+               <div class=random-shown>RECIPE 4</div>
+               <div class=random-shown>RECIPE 5</div>
+               <div class=random-shown>RECIPE 6</div>
+               
+           </div>
+        </div>
+    </div>
+    
+</body>
+</html>
