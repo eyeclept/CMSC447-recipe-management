@@ -72,7 +72,7 @@ body{
     height:18vh;
     background-color:bisque;
     float:right;
-    margin-right:-4vw;
+    margin-right:-8vw;
     text-align:center;
     margin-top:10vh;
 
@@ -83,55 +83,9 @@ body{
     border-color:black;
     border-style:solid;
     margin-top:30vh;
-    margin-left:3.25vw;
+    margin-left:5vw;
     width:50vw;
     height:45vh;
     background-color:lightgrey;
     text-wrap:wrap;
 }
-
-
-
-
-
-
-
-
-</style>
-
-</head>
-<body>
-    <div class=left-section>
-        <h2>Username</h2>
-        <div class=option-box>
-            <button class=option-buttons>Search</button>
-            <button class=option-buttons>My Recipes</button>
-            <button class=option-buttons>Favorites</button>
-        </div>
-    </div>
-    
-    <div class=center-section>
-        <button class=account-options>Sign In</button>
-        <button class=account-options>Sign Out</button>
-        
-        <div class=view-panel>
-            <div>
-                <button class=view-panel-top>Save</button>
-                <button class=view-panel-top>Delete</button>
-            </div>
-                
-            <div>
-                <div class=view-panel-middle-left>Intro/Desc</div>
-                <div class=view-panel-middle-right>Image(?)</div>
-            </div>
-            
-            <div>
-            <div class=view-panel-bottom>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. (Area for recipe)</div>    
-            </div>
-            
-           </div>
-        </div>
-    </div>
-    
-</body>
-</html>
