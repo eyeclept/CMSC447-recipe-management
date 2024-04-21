@@ -3,8 +3,19 @@ from flask_restful import Resource
 import sqlalchemy
 from webargs import fields
 from webargs.flaskparser import use_kwargs
-from sqlalchemy import update
+from sqlalchemy import update, text
 from stubs import *
+
+
+
+
+class TrendingRecipe(Resource):
+    def get(self):
+        """
+        Get a random/otherwise selected recipe and return it
+        """
+        return stubbed_elasticsearch_call()
+
 
 class SearchRecipes(Resource):
     
@@ -128,7 +139,11 @@ class RateRecipe(Resource):
         """
         get avg/total rating for a recipe (dunno how we're doing it)
         """
-        pass
+        with db.engine.connect() as conn:
+            result = conn.execute(text("SELECT COUNT(*) from review WHERE recipe_id = :id AND rating = 1"), 
+                         {"id": kwargs['recipe_id']}
+                         ).scalar_one()
+            return result
 
     @use_kwargs(review_fields, location="query")
     def put(self, **kwargs):
