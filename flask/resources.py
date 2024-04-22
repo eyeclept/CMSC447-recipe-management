@@ -8,7 +8,6 @@ from stubs import *
 
 
 
-
 class TrendingRecipe(Resource):
     def get(self):
         """
@@ -40,7 +39,7 @@ class FavoriteRecipes(Resource):
         for r in user.favorites:
             ids.append(r.recipe_id)
 
-        return stubbed_elasticsearch_call(ids)
+        return stubbed_elasticsearch_call(*ids)
 
     @use_kwargs({"recipe_id": fields.Integer(required=True)}, location="query")
     def put(self, username, **kwargs):
@@ -79,8 +78,8 @@ class OwnRecipes(Resource):
         ids = []
         for r in user.recipes:
             ids.append(r.recipe_id)
-
-        return stubbed_elasticsearch_call(ids)
+        
+        return stubbed_elasticsearch_call(*ids)
 
     def put(self, username):
         """
@@ -89,22 +88,24 @@ class OwnRecipes(Resource):
         json_data:dict = request.get_json(force=True)
 
         # if an id is passed, then the recipe must exist already
-        if id in json_data:
+        if 'recipe_id' in json_data:
             if 'picture' in json_data:
                 db.session.execute(
                     update(Recipe),
                     [
                         {
-                            'recipe_id': id,
+                            'recipe_id': json_data['recipe_id'],
                             'picture': json_data['picture']
                         }
                     ]
                 )
                 db.session.commit()
+
         else:
-            # have to get the id from elasticsearch
-            es = stubbed_elasticsearch_call(json_data)
-            id = es['id']
+            # have to get the id from elasticsearch, not this placeholder
+            id = random.randint(100,1000)
+            FAKE_ES[id] = json_data['recipe']
+
             picture = json_data.pop('picture', None)
             recipe = Recipe(recipe_id=id, username=username, picture=picture)
             db.session.add(recipe)
@@ -121,11 +122,12 @@ class OwnRecipes(Resource):
         recipe = db.session.get(Recipe, kwargs['recipe_id'])
         if not recipe:
             return 200
-        es = stubbed_elasticsearch_call(kwargs)
+        es = stubbed_elasticsearch_call(**kwargs)
 
         db.session.delete(recipe)
         db.session.commit()
         return es
+
 
 class RateRecipe(Resource):
     review_fields = {

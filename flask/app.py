@@ -41,6 +41,8 @@ with app.app_context():
                 break
             # The first column contains the recipe IDs
             id = int(row[0])
+            FAKE_ES[id] = {}
+            FAKE_ES[id]['title'] = row[1]
             # The default username for pre-existing recipes is 'default', there are no associated pictures
             recipe = Recipe(recipe_id=id, username='default', picture=None)
             db.session.add(recipe)

@@ -10,6 +10,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
+FAKE_ES = {}
 
 
 class User(db.Model):
@@ -41,10 +42,9 @@ def stubbed_elasticsearch_call(*args, **kwargs):
     """
     For now, placeholder function for ES
     """
-    return {
-        "key1": "value1",
-        "key2": "value2",
-        "args": args,
-        "kwargs": kwargs,
-        "id": random.randint(20, 2000)
-    }
+    
+    if 'recipe_id' in kwargs:
+        return FAKE_ES[kwargs['recipe_id']]
+    if all([isinstance(x, int) for x in args]):
+        return {x:FAKE_ES[x] for x in args}
+    return FAKE_ES
