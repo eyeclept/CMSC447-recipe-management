@@ -26,9 +26,10 @@ def main():
     # Setup connection to Elasticsearch on Docker
     es = Elasticsearch(
         hosts=["https://localhost:9200"],
-        basic_auth=('elastic', 'changeme')
-        ca_certs="./http_ca.crt"
+        basic_auth=('elastic', 'changeme'),
+        ca_certs="./http_ca.crt",
         verify_certs=False
+
     )
     
     indexName = "recipes"
