@@ -24,7 +24,10 @@ def main():
     details-> Main function to index data and perform search queries.
     """
     # Setup connection to Elasticsearch on Docker
-    es = Elasticsearch(hosts=["localhost:9200"])
+    es = Elasticsearch(
+        hosts=["http://localhost:9200"],
+        http_auth=('elastic', 'changeme')
+    )
     
     indexName = "recipes"
     csvFile = "testdata.csv"
