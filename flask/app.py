@@ -3,8 +3,8 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
-# Replace with the actual url to database
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///replace_me.db'
+# Replace username, password, and 3306 with your mariadb username, password, and port it's on
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://username:password@localhost:3306/recipeManagement_db?create_db=True'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -18,11 +18,11 @@ class User(db.Model):
     favorites = db.relationship('Favorite', backref='user')
 
 class Recipe(db.Model):
-    recipe_id = db.Column(db.Integer, primary_key=True, autoincrement=True, nullable=False)
+    recipe_id = db.Column(db.Integer, primary_key=True, nullable=False)
     username = db.Column(db.String(255), db.ForeignKey('user.username'))
     picture = db.Column(db.LargeBinary)
-    reviews_1 = db.relationship('Review', backref='recipe')
-    favorites_1 = db.relationship('Favorite', backref='recipe')
+    reviews = db.relationship('Review', backref='recipe')
+    favorites = db.relationship('Favorite', backref='recipe')
 
 class Review(db.Model):
     review_id = db.Column(db.Integer, primary_key=True, autoincrement=True, nullable=False)
@@ -39,27 +39,33 @@ with app.app_context():
     # Creates all the tables in the database
     db.create_all()
 
-    # Create a new user
-    new_user = User(username='default', password='default', is_admin=False)   
-    # Add the user to the database session
-    db.session.add(new_user)  
-    db.session.commit()
+    # Check if the default user already exists
+    existing_user = User.query.filter_by(username='default').first()
+    if existing_user is None:
+        # Create the default user
+        new_user = User(username='default', password='default', is_admin=False)   
+        # Add the user to the database session
+        db.session.add(new_user)  
 
-    # Read the first 10 rows of the pre-existing recipes from RecipeNLG_dataset.csv and insert into recipe table
-    with open('RecipeNLG_dataset.csv', newline='') as csvfile:
-        reader = csv.reader(csvfile)
-        # Skip header row
-        next(reader)  
-        # Counter variable to keep track of rows read
-        count = 0
-        for row in reader:
-            # Break the loop if 10 rows have been read
-            if count >= 10:
-                break
-            # The first column contains the recipe IDs
-            id = int(row[0])
-            # The default username for pre-existing recipes is 'default', there are no associated pictures
-            recipe = Recipe(recipe_id=id, username='default', picture=None)
-            db.session.add(recipe)
-            count += 1
+    # Check if the Recipe table is empty
+    if not Recipe.query.first():
+        # Read the first 10 rows of the pre-existing recipes from RecipeNLG_dataset.csv and insert into recipe table
+        with open('RecipeNLG_dataset.csv', newline='') as csvfile:
+            reader = csv.reader(csvfile)
+            # Skip header row
+            next(reader)  
+            # Counter variable to keep track of rows read
+            count = 0
+            for row in reader:
+                # Break the loop if 10 rows have been read
+                if count >= 10:
+                    break
+                # The first column contains the recipe IDs
+                id = int(row[0])
+                # The default username for pre-existing recipes is 'default', there are no associated pictures
+                recipe = Recipe(recipe_id=id, username='default', picture=None)
+                db.session.add(recipe)
+                count += 1
+
+    # Commit all changes to the database session
     db.session.commit()
