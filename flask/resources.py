@@ -7,6 +7,16 @@ from sqlalchemy import update, text
 from stubs import *
 
 
+class GetRecipe(Resource):
+    def get(self, recipe_id):
+
+        recipe:Recipe = db.session.get(Recipe, recipe_id)
+        if not recipe:
+            return 404
+        picture = recipe.picture
+        # include the picture in the response too
+        return stubbed_elasticsearch_call(recipe_id)
+
 
 class TrendingRecipe(Resource):
     def get(self):
