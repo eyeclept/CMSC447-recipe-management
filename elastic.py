@@ -7,118 +7,99 @@ Description:
 Install Info:
       pip install elasticsearch pandas
 """
-# imports
+from datetime import datetime
 from elasticsearch import Elasticsearch
 import pandas as pd
 import time  # To allow indexing to complete before searching
-# constants
 
-# classes
+# Setup connection to Elasticsearch on Docker
+es = Elasticsearch(
+    hosts=["https://localhost:9200"],
+    basic_auth=('elastic', 'changeme'),
+    ca_certs="./ca.crt",
+    verify_certs=False
+)
 
-# main function
-def main():
-    """
-    use-----> Main entry for script execution.
-    input---> 
-    output--> 
-    details-> Main function to index data and perform search queries.
-    """
-    # Setup connection to Elasticsearch on Docker
-    es = Elasticsearch(
-        hosts=["https://localhost:9200"],
-        basic_auth=('elastic', 'changeme'),
-        ca_certs="./http_ca.crt",
-        verify_certs=False
-
-    )
-    
-    indexName = "recipes"
-    csvFile = "testdata.csv"
-
-    # Delete and re-create the index to start fresh
-    if es.indices.exists(index=indexName):
-        es.indices.delete(index=indexName)
-    indexDataFromCsv(es, indexName, csvFile)
-
-    # Allow some time for Elasticsearch to index the data
-    time.sleep(2)
-
-    # Test the Elasticsearch setup
-    testElasticsearch(es, indexName)
-
-# functions
 def indexDataFromCsv(es, indexName, csvFile):
     """
-    use-----> Index data from a CSV file into Elasticsearch.
-    input---> Elasticsearch instance, index name, CSV file path.
-    output--> None, indexes data to Elasticsearch.
-    details-> This function reads a CSV file and indexes its contents into Elasticsearch with proper mapping.
+    Index data from a CSV file into Elasticsearch.
     """
-    # Read data from CSV file
     data = pd.read_csv(csvFile)
-
-    # Define the mapping for the Elasticsearch index
-    mapping = {
-        "mappings": {
-            "properties": {
-                "title": {"type": "text"},
-                "ingredients": {"type": "text"},
-                "directions": {"type": "text"},
-                "description": {"type": "text"},
-                "keywords": {"type": "keyword"}
-            }
-        }
-    }
-
-    # Create the index with the mapping
-    es.indices.create(index=indexName, body=mapping, ignore=400)
-    
-    # Indexing documents
     for _, row in data.iterrows():
-        document = {
+        doc = {
             "title": row['title'],
-            "ingredients": row.get('ingredients', ''),
-            "directions": row.get('directions', ''),
+            "ingredients": row['ingredients'],
+            "directions": row['directions'],
             "description": row['description'],
-            "keywords": row.get('keywords', '').split(', ')
+            "keywords": row['keywords'].split(', '),
+            "timestamp": datetime.now()
         }
-        es.index(index=indexName, id=row['id'], document=document)
+        resp = es.index(index=indexName, id=row['id'], document=doc)
+        print(resp['result'])
+
+def getDocument(es, indexName, documentId):
+    """
+    Get a document by its ID.
+    """
+    resp = es.get(index=indexName, id=documentId)
+    print(resp['_source'])
 
 def searchData(es, indexName, searchText):
     """
-    use-----> Perform a search query in Elasticsearch.
-    input---> Elasticsearch instance, index name, search text.
-    output--> Prints search results.
-    details-> This function uses a multi_match query to search across multiple fields.
+    Search for documents that match the query.
     """
-    # Search query
-    searchQuery = {
-        "query": {
-            "multi_match": {
-                "query": searchText,
-                "fields": ["title", "ingredients", "description", "directions"]
-            }
-        }
+    searchQuery = {"match": {"text": searchText}}
+    resp = es.search(index=indexName, query=searchQuery)
+    print("Got %d Hits:" % resp['hits']['total']['value'])
+    for hit in resp['hits']['hits']:
+        print("%(timestamp)s %(author)s: %(text)s" % hit["_source"])
+
+def updateDocument(es, indexName, documentId, updateFields):
+    """
+    Update a document by ID with new fields.
+    """
+    doc = {
+        'doc': updateFields
     }
-    res = es.search(index=indexName, query=searchQuery)
-    print("Search results:")
-    for hit in res['hits']['hits']:
-        print(hit['_source'])
+    resp = es.update(index=indexName, id=documentId, doc=doc)
+    print(resp['result'])
 
-def testElasticsearch(es, indexName):
+def refreshIndex(es, indexName):
     """
-    use-----> Test the functionality of Elasticsearch with example queries.
-    input---> Elasticsearch instance, index name.
-    output--> Prints results of test queries.
-    details-> This function tests various search aspects to verify indexing and search capabilities.
+    Refresh the index to make all operations performed available to search.
     """
-    print("\nTesting Elasticsearch Index...")
-    # Example search queries
-    testQueries = ["tomato", "pesto", "chocolate"]
-    for query in testQueries:
-        print(f"\nSearching for '{query}'...")
-        searchData(es, indexName, query)
+    es.indices.refresh(index=indexName)
 
-# prebuiltFuncts
+def deleteDocument(es, indexName, documentId):
+    """
+    Delete a document by its ID.
+    """
+    resp = es.delete(index=indexName, id=documentId)
+    print(resp['result'])
+
+def main():
+    indexName = "recipes"
+    csvFile = "testdata.csv"
+    documentId = 1  # Example document ID
+
+    # Indexing example
+    indexDataFromCsv(es, indexName, csvFile)
+
+    # Refresh index
+    refreshIndex(es, indexName)
+
+    # Get document
+    getDocument(es, indexName, documentId)
+
+    # Update document
+    updateFields = {'text': 'Updated text here...', 'timestamp': datetime.now()}
+    updateDocument(es, indexName, documentId, updateFields)
+
+    # Search documents
+    searchData(es, indexName, "Updated")
+
+    # Delete document
+    deleteDocument(es, indexName, documentId)
+
 if __name__ == "__main__":
     main()
