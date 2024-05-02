@@ -6,7 +6,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_restful import Api
 
-from stubs import *
+from app_setup import *
 from resources import OwnRecipes
 
 api = Api(app)

@@ -4,7 +4,7 @@ import sqlalchemy
 from webargs import fields
 from webargs.flaskparser import use_kwargs
 from sqlalchemy import update, text
-from stubs import *
+from app_setup import *
 
 
 class GetRecipe(Resource):
@@ -15,6 +15,7 @@ class GetRecipe(Resource):
             return 404
         picture = recipe.picture
         # include the picture in the response too
+        """This should return the document in elastic search with the given ID"""
         return stubbed_elasticsearch_call(recipe_id)
 
 
@@ -23,6 +24,8 @@ class TrendingRecipe(Resource):
         """
         Get a random/otherwise selected recipe and return it
         """
+
+        """This can return recipe from elasticsearch"""
         return stubbed_elasticsearch_call()
 
 
@@ -49,6 +52,7 @@ class FavoriteRecipes(Resource):
         for r in user.favorites:
             ids.append(r.recipe_id)
 
+        """This should return all recipes with id's in the passed list"""
         return stubbed_elasticsearch_call(*ids)
 
     @use_kwargs({"recipe_id": fields.Integer(required=True)}, location="query")
@@ -89,6 +93,7 @@ class OwnRecipes(Resource):
         for r in user.recipes:
             ids.append(r.recipe_id)
         
+        """This can be the exact same call as in the get for FavoriteRecipes"""
         return stubbed_elasticsearch_call(*ids)
 
     def put(self, username):
@@ -113,6 +118,10 @@ class OwnRecipes(Resource):
 
         else:
             # have to get the id from elasticsearch, not this placeholder
+            """ The actual order of operations should be insert into Elastic-
+                Search FIRST, then get the id from the newly inserted field,
+                and then add it to the database.
+            """
             id = random.randint(100,1000)
             FAKE_ES[id] = json_data['recipe']
 
@@ -132,6 +141,7 @@ class OwnRecipes(Resource):
         recipe = db.session.get(Recipe, kwargs['recipe_id'])
         if not recipe:
             return 200
+        """Delete from ElasticSearch where recipe_id matches"""
         es = stubbed_elasticsearch_call(**kwargs)
 
         db.session.delete(recipe)
