@@ -7,7 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_restful import Api
 
 from app_setup import *
-from resources import OwnRecipes
+from resources import *
 
 api = Api(app)
 
@@ -54,7 +54,13 @@ with app.app_context():
                 count += 1
         db.session.commit()
 
-api.add_resource(OwnRecipes, "/recipes/<username>")
+
+api.add_resource(GetRecipe, "/recipes/single/<recipe_id>")
+api.add_resource(TrendingRecipe, "/recipes/trending")
+api.add_resource(SearchRecipes, "/recipes/search")
+api.add_resource(FavoriteRecipes, "/recipes/favorites/<username>")
+api.add_resource(OwnRecipes, "/recipes/user/<username>")
+api.add_resource(RateRecipe, "/recipes/rate")
 
 if __name__ == '__main__':
     app.run(debug=True)

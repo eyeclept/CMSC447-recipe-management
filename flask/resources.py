@@ -5,7 +5,7 @@ from webargs import fields
 from webargs.flaskparser import use_kwargs
 from sqlalchemy import update, text
 from app_setup import *
-
+from constants import *
 
 class GetRecipe(Resource):
     def get(self, recipe_id):
@@ -55,26 +55,26 @@ class FavoriteRecipes(Resource):
         """This should return all recipes with id's in the passed list"""
         return stubbed_elasticsearch_call(*ids)
 
-    @use_kwargs({"recipe_id": fields.Integer(required=True)}, location="query")
+    @use_kwargs({RECIPE_ID: fields.Integer(required=True)}, location="query")
     def put(self, username, **kwargs):
         """
         add a recipe to a user's favorites
         """
-        if db.session.get(Favorite, kwargs['recipe_id']):
+        if db.session.get(Favorite, kwargs[RECIPE_ID]):
             return 200
         
-        fav:Favorite = Favorite(username=username, recipe_id=kwargs['recipe_id'])
+        fav:Favorite = Favorite(username=username, recipe_id=kwargs[RECIPE_ID])
         db.session.add(fav)
         db.session.commit()
 
         return 200
 
-    @use_kwargs({"recipe_id": fields.Integer(required=True)}, location="query")
+    @use_kwargs({RECIPE_ID: fields.Integer(required=True)}, location="query")
     def delete(self, username, **kwargs):
         """
         remove a recipe from a user's favorites
         """
-        fav = db.session.get(Favorite, {'username':username, 'recipe_id':kwargs['recipe_id']})
+        fav = db.session.get(Favorite, {USERNAME:username, RECIPE_ID:kwargs[RECIPE_ID]})
         db.session.delete(fav)
         db.session.commit()
 
@@ -103,14 +103,14 @@ class OwnRecipes(Resource):
         json_data:dict = request.get_json(force=True)
 
         # if an id is passed, then the recipe must exist already
-        if 'recipe_id' in json_data:
-            if 'picture' in json_data:
+        if RECIPE_ID in json_data:
+            if PICTURE in json_data:
                 db.session.execute(
                     update(Recipe),
                     [
                         {
-                            'recipe_id': json_data['recipe_id'],
-                            'picture': json_data['picture']
+                            RECIPE_ID: json_data[RECIPE_ID],
+                            PICTURE: json_data[PICTURE]
                         }
                     ]
                 )
@@ -123,9 +123,9 @@ class OwnRecipes(Resource):
                 and then add it to the database.
             """
             id = random.randint(100,1000)
-            FAKE_ES[id] = json_data['recipe']
+            FAKE_ES[id] = json_data[RECIPE]
 
-            picture = json_data.pop('picture', None)
+            picture = json_data.pop(PICTURE, None)
             recipe = Recipe(recipe_id=id, username=username, picture=picture)
             db.session.add(recipe)
             db.session.commit()
@@ -133,12 +133,12 @@ class OwnRecipes(Resource):
 
         return "done"
     
-    @use_kwargs({'recipe_id': fields.Integer(required=True)}, location="query")
+    @use_kwargs({RECIPE_ID: fields.Integer(required=True)}, location="query")
     def delete(self, username, **kwargs):
         """
         delete a recipe
         """
-        recipe = db.session.get(Recipe, kwargs['recipe_id'])
+        recipe = db.session.get(Recipe, kwargs[RECIPE_ID])
         if not recipe:
             return 200
         """Delete from ElasticSearch where recipe_id matches"""
@@ -151,19 +151,19 @@ class OwnRecipes(Resource):
 
 class RateRecipe(Resource):
     review_fields = {
-        'recipe_id': fields.Integer(required=True),
-        'username': fields.String(required=True),
-        'rating': fields.Boolean(required=False, default=True)
+        RECIPE_ID: fields.Integer(required=True),
+        USERNAME: fields.String(required=True),
+        RATING: fields.Boolean(required=False, default=True)
     }
 
-    @use_kwargs({'recipe_id': fields.Integer(required=True)}, location="query")
+    @use_kwargs({RECIPE_ID: fields.Integer(required=True)}, location="query")
     def get(self, **kwargs):
         """
         get avg/total rating for a recipe (dunno how we're doing it)
         """
         with db.engine.connect() as conn:
             result = conn.execute(text("SELECT COUNT(*) from review WHERE recipe_id = :id AND rating = 1"), 
-                         {"id": kwargs['recipe_id']}
+                         {"id": kwargs[RECIPE_ID]}
                          ).scalar_one()
             return result
 
@@ -172,11 +172,11 @@ class RateRecipe(Resource):
         """
         give a rating to a recipe
         """
-        review:Review = db.session.get(Review, {'username':kwargs['username'], 'recipe_id':kwargs['recipe_id']})
+        review:Review = db.session.get(Review, {USERNAME:kwargs[USERNAME], RECIPE_ID:kwargs[RECIPE_ID]})
         if review:
-            review.rating = kwargs['rating']
+            review.rating = kwargs[RATING]
         else:
-            review = Review(username=kwargs['username'], recipe_id=kwargs['recipe_id'], rating=kwargs['rating'])
+            review = Review(username=kwargs[USERNAME], recipe_id=kwargs[RECIPE_ID], rating=kwargs[RECIPE_ID])
             db.session.add(review)
 
         db.session.commit()
@@ -188,7 +188,7 @@ class RateRecipe(Resource):
         """
         delete recipe rating
         """
-        review = db.session.get(Review, {'username':kwargs['username'], 'recipe_id':kwargs['recipe_id']})
+        review = db.session.get(Review, {USERNAME:kwargs[USERNAME], RECIPE_ID:kwargs[RECIPE_ID]})
         if not review:
             return 200
         db.session.delete(review)

@@ -3,6 +3,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_restful import Api
 import random
+from constants import *
 
 app = Flask(__name__)
 # Replace with the actual url to database
@@ -43,8 +44,8 @@ def stubbed_elasticsearch_call(*args, **kwargs):
     For now, placeholder function for ES
     """
     
-    if 'recipe_id' in kwargs:
-        return FAKE_ES[kwargs['recipe_id']]
+    if RECIPE_ID in kwargs:
+        return FAKE_ES[kwargs[RECIPE_ID]]
     if all([isinstance(x, int) for x in args]):
         return {x:FAKE_ES[x] for x in args}
     return FAKE_ES
