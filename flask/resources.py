@@ -27,13 +27,13 @@ class TrendingRecipe(Resource):
         Get a random/otherwise selected recipe and return it
         """
 
-        """This can return recipe from elasticsearch"""
+        """This returns some (random) recipe from elasticsearch"""
         return stubbed_elasticsearch_call()
 
 
 class SearchRecipes(Resource):
     
-    @use_kwargs({"query": fields.String()}, location="query")
+    @use_kwargs({QUERY: fields.String()}, location="query")
     def get(self, **kwargs):
         """
         Make an ES call for the search and return the results
@@ -131,7 +131,6 @@ class OwnRecipes(Resource):
             db.session.add(recipe)
             db.session.commit()
 
-
         return "done"
     
     @use_kwargs({RECIPE_ID: fields.Integer(required=True)}, location="query")
@@ -160,7 +159,7 @@ class RateRecipe(Resource):
     @use_kwargs({RECIPE_ID: fields.Integer(required=True)}, location="query")
     def get(self, **kwargs):
         """
-        get avg/total rating for a recipe (dunno how we're doing it)
+        Get number of good recipe ratings
         """
         with db.engine.connect() as conn:
             result = conn.execute(text("SELECT COUNT(*) from review WHERE recipe_id = :id AND rating = 1"), 
@@ -171,7 +170,7 @@ class RateRecipe(Resource):
     @use_kwargs(review_fields, location="query")
     def put(self, **kwargs):
         """
-        give a rating to a recipe
+        Give a rating to a recipe
         """
         review:Review = db.session.get(Review, {USERNAME:kwargs[USERNAME], RECIPE_ID:kwargs[RECIPE_ID]})
         if review:
@@ -187,7 +186,7 @@ class RateRecipe(Resource):
     @use_kwargs(review_fields, location="query")
     def delete(self, **kwargs):
         """
-        delete recipe rating
+        Delete recipe rating
         """
         review = db.session.get(Review, {USERNAME:kwargs[USERNAME], RECIPE_ID:kwargs[RECIPE_ID]})
         if not review:
