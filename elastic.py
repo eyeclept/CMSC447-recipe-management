@@ -13,38 +13,43 @@ import pandas as pd
 import time  # To allow indexing to complete before searching
 
 # Setup connection to Elasticsearch on Docker
-es = Elasticsearch(
+BASE_ELASTIC_INFO = Elasticsearch(
     hosts=["https://localhost:9200"],
     basic_auth=('elastic', 'changeme'),
     ca_certs="./ca.crt",
     verify_certs=False
 )
 
-def indexDataFromCsv(es, indexName, csvFile):
+def indexDataFromCsv(csvFile, indexName = "recipes", es = BASE_ELASTIC_INFO):
     """
     Index data from a CSV file into Elasticsearch.
+    This function reads a CSV file and indexes its contents into Elasticsearch with proper mapping.
+    Each row in the CSV file is expected to have recipieID, title, ingredients, directions, and link columns.
     """
+    # Read data from CSV file
     data = pd.read_csv(csvFile)
+    
+    # Indexing documents
     for _, row in data.iterrows():
-        doc = {
+        document = {
+            "recipeID": row['#'], 
             "title": row['title'],
             "ingredients": row['ingredients'],
             "directions": row['directions'],
-            "description": row['description'],
-            "keywords": row['keywords'].split(', '),
-            "timestamp": datetime.now()
+            "link": row['link']
         }
-        resp = es.index(index=indexName, id=row['id'], document=doc)
+        resp = es.index(index=indexName, id=row['recipeID'], document=document)  # Use recipeID as the document ID
         print(resp['result'])
 
-def getDocument(es, indexName, documentId):
+
+def getDocument(documentId, indexName = "recipes", es = BASE_ELASTIC_INFO):
     """
     Get a document by its ID.
     """
     resp = es.get(index=indexName, id=documentId)
     print(resp['_source'])
 
-def searchData(es, indexName, searchText):
+def searchData(searchText, indexName = "recipes", es = BASE_ELASTIC_INFO):
     """
     Search for documents that match the query.
     """
@@ -54,7 +59,7 @@ def searchData(es, indexName, searchText):
     for hit in resp['hits']['hits']:
         print("%(timestamp)s %(author)s: %(text)s" % hit["_source"])
 
-def updateDocument(es, indexName, documentId, updateFields):
+def updateDocument(documentId, updateFields, indexName = "recipes", es = BASE_ELASTIC_INFO):
     """
     Update a document by ID with new fields.
     """
@@ -64,13 +69,13 @@ def updateDocument(es, indexName, documentId, updateFields):
     resp = es.update(index=indexName, id=documentId, doc=doc)
     print(resp['result'])
 
-def refreshIndex(es, indexName):
+def refreshIndex(indexName = "recipes", es = BASE_ELASTIC_INFO):
     """
     Refresh the index to make all operations performed available to search.
     """
     es.indices.refresh(index=indexName)
 
-def deleteDocument(es, indexName, documentId):
+def deleteDocument(documentId, indexName = "recipes", es = BASE_ELASTIC_INFO):
     """
     Delete a document by its ID.
     """
@@ -78,28 +83,27 @@ def deleteDocument(es, indexName, documentId):
     print(resp['result'])
 
 def main():
-    indexName = "recipes"
     csvFile = "testdata.csv"
     documentId = 1  # Example document ID
 
     # Indexing example
-    indexDataFromCsv(es, indexName, csvFile)
+    indexDataFromCsv(csvFile)
 
     # Refresh index
-    refreshIndex(es, indexName)
+    refreshIndex()
 
     # Get document
-    getDocument(es, indexName, documentId)
+    getDocument(documentId)
 
     # Update document
-    updateFields = {'text': 'Updated text here...', 'timestamp': datetime.now()}
-    updateDocument(es, indexName, documentId, updateFields)
+    updateFields = {'title': 'Updated title here...', 'timestamp': datetime.now()}
+    updateDocument(documentId, updateFields)
 
     # Search documents
-    searchData(es, indexName, "Updated")
+    searchData("Updated")
 
     # Delete document
-    deleteDocument(es, indexName, documentId)
+    deleteDocument(documentId)
 
 if __name__ == "__main__":
     main()
