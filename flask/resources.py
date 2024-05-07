@@ -13,10 +13,12 @@ class GetRecipe(Resource):
         recipe:Recipe = db.session.get(Recipe, recipe_id)
         if not recipe:
             return 404
-        picture = recipe.picture
-        # include the picture in the response too
+        
         """This should return the document in elastic search with the given ID"""
-        return stubbed_elasticsearch_call(recipe_id)
+        recipe_doc = stubbed_elasticsearch_call(recipe_id)
+        recipe_doc[PICTURE] = recipe.picture
+
+        return recipe_doc
 
 
 class TrendingRecipe(Resource):
@@ -31,13 +33,12 @@ class TrendingRecipe(Resource):
 
 class SearchRecipes(Resource):
     
-    def get(self):
+    @use_kwargs({"query": fields.String()}, location="query")
+    def get(self, **kwargs):
         """
         Make an ES call for the search and return the results
-
-        query terms passed as json? not sure, need to talk to front end
-        """
-        return stubbed_elasticsearch_call()
+        """        
+        return stubbed_elasticsearch_call(kwargs["query"])
 
 
 class FavoriteRecipes(Resource):
