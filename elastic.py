@@ -83,7 +83,7 @@ def deleteDocument(documentId, indexName = "recipes", es = BASE_ELASTIC_INFO):
     print(resp['result'])
 
 def main():
-    csvFile = "testdata.csv"
+    csvFile = "RecipeNLG_dataset.csv"
     documentId = 1  # Example document ID
 
     # Indexing example
