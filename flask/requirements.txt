@@ -1,5 +1,7 @@
 Flask==2.3.2
 Flask-SQLAlchemy==3.0.3
+flask-bcrypt==1.0.1
+flask-login==0.6.3
 flask-restful
 sqlalchemy
 sqlalchemy-utils

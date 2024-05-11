@@ -7,6 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_restful import Api
 
 from app_setup import *
+from account_management import *
 from resources import *
 
 api = Api(app)

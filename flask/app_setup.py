@@ -1,6 +1,7 @@
 import csv
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flask_login, import LoginManager, UserMixin
 from flask_restful import Api
 import random
 from constants import *
@@ -12,9 +13,10 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 FAKE_ES = {}
+login_manager = LoginManager()
+login_manager.init_app(app)
 
-
-class User(db.Model):
+class User(UserMixin, db.Model):
     username = db.Column(db.String(255), primary_key=True, nullable=False)
     password = db.Column(db.String(255))
     is_admin = db.Column(db.Boolean)
@@ -49,3 +51,7 @@ def stubbed_elasticsearch_call(*args, **kwargs):
     if all([isinstance(x, int) for x in args]):
         return {x:FAKE_ES[x] for x in args}
     return FAKE_ES
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(user_id)
