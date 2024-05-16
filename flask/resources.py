@@ -6,6 +6,7 @@ from webargs.flaskparser import use_kwargs
 from sqlalchemy import update, text
 from app_setup import *
 from constants import *
+from elastic import *
 
 class GetRecipe(Resource):
     def get(self, recipe_id):
@@ -15,10 +16,13 @@ class GetRecipe(Resource):
             return 404
         
         """This should return the document in elastic search with the given ID"""
-        recipe_doc = stubbed_elasticsearch_call(recipe_id)
-        recipe_doc[PICTURE] = recipe.picture
+        try:
+            recipe_doc = get_document(recipe_id)
+            recipe_doc[PICTURE] = recipe.picture
 
-        return recipe_doc
+            return recipe_doc
+        except:
+            return 404
 
 
 class TrendingRecipe(Resource):
@@ -28,17 +32,17 @@ class TrendingRecipe(Resource):
         """
 
         """This returns some (random) recipe from elasticsearch"""
-        return stubbed_elasticsearch_call()
+        return get_random_document()
 
 
 class SearchRecipes(Resource):
     
-    @use_kwargs({QUERY: fields.String()}, location="query")
+    @use_kwargs({QUERY: fields.String(required=True)}, location="query")
     def get(self, **kwargs):
         """
         Make an ES call for the search and return the results
         """        
-        return stubbed_elasticsearch_call(kwargs["query"])
+        return search_data(kwargs[QUERY])
 
 
 class FavoriteRecipes(Resource):
@@ -49,12 +53,14 @@ class FavoriteRecipes(Resource):
         """
         user:User = db.session.get(User, username)
 
-        ids = []
+        res = []
         for r in user.favorites:
-            ids.append(r.recipe_id)
-
-        """This should return all recipes with id's in the passed list"""
-        return stubbed_elasticsearch_call(*ids)
+            id = r.recipe_id
+            try:
+                res.append(get_document(id))
+            except:
+                continue
+        return res
 
     @use_kwargs({RECIPE_ID: fields.Integer(required=True)}, location="query")
     def put(self, username, **kwargs):
@@ -90,12 +96,14 @@ class OwnRecipes(Resource):
         """
         user:User = db.session.get(User, username)
 
-        ids = []
+        results = []
         for r in user.recipes:
-            ids.append(r.recipe_id)
-        
-        """This can be the exact same call as in the get for FavoriteRecipes"""
-        return stubbed_elasticsearch_call(*ids)
+            id = r.recipe_id
+            try:
+                results.append(get_document(id))
+            except:
+                continue        
+        return results
 
     def put(self, username):
         """
@@ -116,22 +124,17 @@ class OwnRecipes(Resource):
                     ]
                 )
                 db.session.commit()
-
+                res = update_document(json_data[RECIPE_ID], json_data[RECIPE])
+                return {"status": res}
         else:
-            # have to get the id from elasticsearch, not this placeholder
-            """ The actual order of operations should be insert into Elastic-
-                Search FIRST, then get the id from the newly inserted field,
-                and then add it to the database.
-            """
-            id = random.randint(100,1000)
-            FAKE_ES[id] = json_data[RECIPE]
+            id = insert_document(json_data[RECIPE])
 
             picture = json_data.pop(PICTURE, None)
             recipe = Recipe(recipe_id=id, username=username, picture=picture)
             db.session.add(recipe)
             db.session.commit()
 
-        return "done"
+        return 200
     
     @use_kwargs({RECIPE_ID: fields.Integer(required=True)}, location="query")
     def delete(self, username, **kwargs):
@@ -141,12 +144,16 @@ class OwnRecipes(Resource):
         recipe = db.session.get(Recipe, kwargs[RECIPE_ID])
         if not recipe:
             return 200
-        """Delete from ElasticSearch where recipe_id matches"""
-        es = stubbed_elasticsearch_call(**kwargs)
-
+        
+        # if this fails, then the recipe id doesn't exist, which is the desired state
+        try:
+            delete_document(kwargs[RECIPE_ID])
+        except:
+            pass
+        
         db.session.delete(recipe)
         db.session.commit()
-        return es
+        return 200
 
 
 class RateRecipe(Resource):

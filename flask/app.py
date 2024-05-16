@@ -9,6 +9,7 @@ from flask_restful import Api
 from app_setup import *
 from account_management import *
 from resources import *
+from elastic import *
 
 api = Api(app)
 

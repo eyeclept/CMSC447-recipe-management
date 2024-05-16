@@ -115,7 +115,7 @@ def refresh_index(indexName="recipes", es=BASE_ELASTIC_INFO):
     es.indices.refresh(index=indexName)
 
 
-def delete_document(documentId, indexName="recipes", es=BASE_ELASTIC_INFO):
+def delete_document(documentId, indexName="recipes", es=BASE_ELASTIC_INFO) -> str:
     """
     Delete a document by its ID.
 
@@ -125,7 +125,7 @@ def delete_document(documentId, indexName="recipes", es=BASE_ELASTIC_INFO):
     return resp['result']
 
 
-def random_document(indexName="recipes", es=BASE_ELASTIC_INFO):
+def get_random_document(indexName="recipes", es=BASE_ELASTIC_INFO):
     """
     Get a random document from the index.
 
