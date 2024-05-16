@@ -8,3 +8,5 @@ flask-restful
 sqlalchemy
 sqlalchemy-utils
 webargs
+elasticsearch
+pandas
