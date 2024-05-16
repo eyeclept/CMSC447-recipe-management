@@ -47,13 +47,15 @@ body{
     width:60vw;
     height:80vh;
     background-color:lightgrey;
+    overflow-y: scroll;
+
 }
 .random-shown{
     background-color:bisque;
     width:15vw;
     height:20vh;
-    margin-left:2.5vw;
-    margin-right:2.5vw;
+    margin-left:2vw;
+    margin-right:2vw;
     margin-top:2.5vh;
     margin-bottom:2.5vh;
     float:left;

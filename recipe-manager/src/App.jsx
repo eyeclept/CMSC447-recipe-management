@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {Router, Route, Routes } from 'react-router-dom';
 import { BrowserRouter } from "react-router-dom";
 import './App.css'
@@ -13,10 +13,6 @@ function changeURL(pathName){
   window.location.pathname = pathName;
 }
 
-async function fetchRandom(){
-   return (fetch('/recipes/trending'))
-   
-}
 
 function App() {
 
@@ -41,7 +37,27 @@ function HomePage(){
               {recipe.name} */
 
 
-  const [data, setData] = useState('');
+  const [data, setData] = useState([]);
+  useEffect(() => {
+      const fetchRandom = async () => {
+        try{
+          const response = await fetch('/recipes/trending');
+          if(!response.ok){
+            throw new Error("Failed to Fetch Data");
+          }
+          const recipe = await response.json();
+          setData(prevRecipes => [...prevRecipes, recipe])
+
+        }
+        catch(error){
+          console.error("Could not fetch Recipe", error);
+        }
+      };
+      for(let i = 0; i < 9; i++){
+        fetchRandom();
+      }
+
+    },[]);
 
   return (
     
