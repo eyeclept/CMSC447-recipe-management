@@ -20,7 +20,7 @@ BASE_ELASTIC_INFO = Elasticsearch(
     verify_certs=False
 )
 
-def indexDataFromCsv(csvFile, indexName = "recipes", es = BASE_ELASTIC_INFO):
+def index_data_from_csv(csvFile, indexName = "recipes", es = BASE_ELASTIC_INFO):
     """
     Index data from a CSV file into Elasticsearch.
     This function reads a CSV file and indexes its contents into Elasticsearch with proper mapping.
@@ -42,14 +42,14 @@ def indexDataFromCsv(csvFile, indexName = "recipes", es = BASE_ELASTIC_INFO):
         print(resp['result'])
 
 
-def getDocument(documentId, indexName = "recipes", es = BASE_ELASTIC_INFO):
+def get_document(documentId, indexName = "recipes", es = BASE_ELASTIC_INFO):
     """
     Get a document by its ID.
     """
     resp = es.get(index=indexName, id=documentId)
     print(resp['_source'])
 
-def searchData(searchText, indexName = "recipes", es = BASE_ELASTIC_INFO):
+def search_data(searchText, indexName = "recipes", es = BASE_ELASTIC_INFO):
     """
     Search for documents that match the query.
     """
@@ -59,7 +59,7 @@ def searchData(searchText, indexName = "recipes", es = BASE_ELASTIC_INFO):
     for hit in resp['hits']['hits']:
         print("%(timestamp)s %(author)s: %(text)s" % hit["_source"])
 
-def updateDocument(documentId, updateFields, indexName = "recipes", es = BASE_ELASTIC_INFO):
+def update_document(documentId, updateFields, indexName = "recipes", es = BASE_ELASTIC_INFO):
     """
     Update a document by ID with new fields.
     """
@@ -69,13 +69,13 @@ def updateDocument(documentId, updateFields, indexName = "recipes", es = BASE_EL
     resp = es.update(index=indexName, id=documentId, doc=doc)
     print(resp['result'])
 
-def refreshIndex(indexName = "recipes", es = BASE_ELASTIC_INFO):
+def refresh_index(indexName = "recipes", es = BASE_ELASTIC_INFO):
     """
     Refresh the index to make all operations performed available to search.
     """
     es.indices.refresh(index=indexName)
 
-def deleteDocument(documentId, indexName = "recipes", es = BASE_ELASTIC_INFO):
+def delete_document(documentId, indexName = "recipes", es = BASE_ELASTIC_INFO):
     """
     Delete a document by its ID.
     """
@@ -87,23 +87,23 @@ def main():
     documentId = 1  # Example document ID
 
     # Indexing example
-    indexDataFromCsv(csvFile)
+    index_data_from_csv(csvFile)
 
     # Refresh index
-    refreshIndex()
+    refresh_index()
 
     # Get document
-    getDocument(documentId)
+    get_document(documentId)
 
     # Update document
     updateFields = {'title': 'Updated title here...', 'timestamp': datetime.now()}
-    updateDocument(documentId, updateFields)
+    update_document(documentId, updateFields)
 
     # Search documents
-    searchData("Updated")
+    search_data("Updated")
 
     # Delete document
-    deleteDocument(documentId)
+    delete_document(documentId)
 
 if __name__ == "__main__":
     main()
