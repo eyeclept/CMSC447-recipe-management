@@ -1,9 +1,8 @@
 {
-  "name": "home-page",
+  "name": "recipe-manager",
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "proxy": "http://localhost:5173/",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -12,7 +11,8 @@
   },
   "dependencies": {
     "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.23.1",
     "registry.npmjs.org": "^1.0.1"
   },
   "devDependencies": {
@@ -25,4 +25,5 @@
     "eslint-plugin-react-refresh": "^0.4.6",
     "vite": "^5.2.0"
   }
+  
 }

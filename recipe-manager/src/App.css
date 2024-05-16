@@ -31,12 +31,76 @@ body{
     width:30vw;
     height:4vh;
 }
-
 .account-options{
     float:right;
     text-align:right;
     height:5vh;
     font-size:x-small;
+}
+.browse-panel{
+    text-align:center;
+    border-width:medium;
+    border-color:black;
+    border-style:solid;
+    margin-top:15vh;
+    margin-left:3.25vw;
+    width:60vw;
+    height:80vh;
+    background-color:lightgrey;
+}
+.random-shown{
+    background-color:bisque;
+    width:15vw;
+    height:20vh;
+    margin-left:2.5vw;
+    margin-right:2.5vw;
+    margin-top:2.5vh;
+    margin-bottom:2.5vh;
+    float:left;
+    color:black;
+}
+.filter-button{
+    margin-bottom:0vh;
+    width:60vw;
+    height:5vh;
+}
+input[type=text]{
+    margin-top:2vh;
+    width:60vw;
+    height:5vh;
+}
+h2{
+    margin-top: 0vh;
+    height: 10vh;
+}
+.website-name{
+    font-size:xx-large;
+    margin:0%;
+}
+.login-page{
+    text-align:center;
+    width: 100vw;
+    height: 80vh;
+    margin-top: 10vh;
+}
+.label-login{
+    display:inline-block;
+}
+.login-input{
+    width:25%;
+}
+.button-wrapper{
+    text-align:center;
+
+}
+.login-button{
+    
+    font-size:small;
+    padding:3px;
+    background-color:lightgrey;
+    border:1%;
+    margin-left: .3vw;
+
 }
 .view-panel{
     text-align:center;
@@ -91,7 +155,6 @@ body{
     height:45vh;
     background-color:lightgrey;
     text-wrap:wrap;
-}
+
 </style>
 </head>
-
