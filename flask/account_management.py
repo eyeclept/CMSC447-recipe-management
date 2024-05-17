@@ -9,19 +9,23 @@ bcrypt = Bcrypt(app)
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+        given_username = request.form['username']
+        given_password = request.form['password']
+
+        # Input validation
+        if not given_username or not given_password:
+            return 'Please enter a username and password.'
 
         # Check if username already exists
-        existing_user = User.query.filter_by(username=username).first()
+        existing_user = User.query.filter_by(username=given_username).first()
         if existing_user:
             return 'Username already exists, please enter a different one.'
 
         # Hash the password
-        hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+        hashed_password = bcrypt.generate_password_hash(given_password).decode('utf-8')
 
         # Create the new user
-        new_user = User(username=username, password=hashed_password, is_admin=False)
+        new_user = User(username=given_username, password=hashed_password, is_admin=False)
 
         # Add the user to the database session
         db.session.add(new_user)
@@ -35,13 +39,16 @@ def register():
 # Logging in
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    if current_user.is_authenticated:
+        return "User already logged in."
+
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+        given_username = request.form['username']
+        given_password = request.form['password']
 
         # Query the database to find the user by username
-        user = User.query.filter_by(username=username).first()
-        if user and bcrypt.check_password_hash(user.password, password):
+        user = User.query.filter_by(username=given_username).first()
+        if user and bcrypt.check_password_hash(user.password, given_password):
             login_user(user)
             return 'Login successful.'
         else:

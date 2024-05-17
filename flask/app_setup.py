@@ -7,8 +7,7 @@ import random
 from constants import *
 
 app = Flask(__name__)
-# Replace with the actual url to database
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://projectuser:localhost:3306/projectdb447'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -53,5 +52,5 @@ def stubbed_elasticsearch_call(*args, **kwargs):
     return FAKE_ES
 
 @login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(user_id)
+def load_user(username):
+    return User.query.get(username)
