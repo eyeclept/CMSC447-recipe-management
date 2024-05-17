@@ -17,7 +17,7 @@ from constants import *
 # Setup connection to Elasticsearch on Docker
 BASE_ELASTIC_INFO = Elasticsearch(
     hosts=["https://localhost:9200"],
-    basic_auth=('elastic', 'ag80tinh5BKN-bBL2s0x'),
+    basic_auth=('elastic', 'changeme'),
     ca_certs="flask/http_ca.crt",
     verify_certs=False
 )
