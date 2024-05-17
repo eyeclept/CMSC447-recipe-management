@@ -24,7 +24,6 @@ def test_trending_recipe(quiet=True):
     if not resp_1.status_code == 200 and resp_2.status_code == 200:
         print("TRENDING TEST FAILED: DID NOT RETURN 200")
         return False
-    print(resp_1.text)
     rec_1 = resp_1.json()
     rec_2 = resp_2.json()
 
@@ -36,16 +35,12 @@ def test_trending_recipe(quiet=True):
 
 def test_get_recipe(quiet=True):
     # get a recipe
-    resp = requests.get(FLASK + TRENDING_RECIPE)
-    rand_rec = resp.json()
+    rand_rec = get_rand_recipe()
     
     rand_id = rand_rec[RECIPE_ID]
-    print(rand_id)
     resp = requests.get(FLASK + GET_RECIPE + rand_id)
     if resp.status_code != 200:
-        print("FAILED TO GET RECIPE")
-        print(resp.text)
-        
+        print("FAILED TO GET RECIPE")        
         return False
     rec = resp.json()
     if not quiet:
@@ -53,11 +48,145 @@ def test_get_recipe(quiet=True):
     
     return rec[TITLE] == rand_rec[TITLE]
 
-def run_tests():
-    general_test(test_trending_recipe, "TREND PASS", "TREND FAIL", False)
-    general_test(test_get_recipe, "GET PASS", "GET FAIL", True)
-    
+def test_search(quiet=True):
+    search_term = "cheese"
+    resp = requests.get(FLASK + SEARCH_RECIPE, params={"query": search_term})
 
+    if resp.status_code != 200:
+        print("SEARCH FAILED")
+        return False
+    results = resp.json()
+
+    return isinstance(results, list) and len(results) > 0
+
+
+def test_favorite(quiet=True):
+    rand_rec = get_rand_recipe()
+    rec_id = rand_rec[RECIPE_ID]
+    username="default"
+    resp = requests.put(FLASK + FAV_RECIPE + username, params={RECIPE_ID: rec_id})
+
+    if resp.status_code != 200:
+        print("FAVORITE FAIL INSERT")
+        print(resp.text)
+        return False
+
+    resp = requests.get(FLASK + FAV_RECIPE + username)
+    if resp.status_code != 200:
+        print("FAVORITE FAIL GET")
+
+    data:list = resp.json()
+    added = False
+    for recipe in data:
+        if recipe[RECIPE_ID] == rec_id:
+            added = True
+            break
+
+    if not added:
+        print("FAVORITE FAILED TO INSERT")
+        return False
+
+    resp = requests.delete(FLASK + FAV_RECIPE + username, params={RECIPE_ID: rec_id})
+    if resp.status_code != 200:
+        print("FAVORITE FAIL DELETE")
+        return False
+    
+    resp = requests.get(FLASK + FAV_RECIPE + username)
+    if resp.status_code != 200:
+        print("FAVORITE FAIL GET")
+
+    data:list = resp.json()
+    for recipe in data:
+        if recipe[RECIPE_ID] == rec_id:
+            print("FAVORITE FAIL DELETE")
+            return False
+
+    return True
+
+
+def test_own(quiet=True):
+    DUMMY_RECIPE = {
+        "title": "This is my test recipe",
+        "ingredients": ["ingred1", "ingred2"],
+        "directions": "blah blah directions",
+        "description": "blah blah description",
+        "keywords": ["some", "keywords", "here"]
+    }
+    username = "default"
+
+    # put a recipe
+    resp = requests.put(FLASK + OWN_RECIPE + username, json=DUMMY_RECIPE)
+    if resp.status_code != 200:
+        print("OWN FAILED TO PUT")
+        print(resp.text)
+        return False
+
+    resp_data = resp.json()
+    id = resp_data[RECIPE_ID]
+
+    # check if it got added to db
+    resp = requests.get(FLASK + OWN_RECIPE + username)
+    if resp.status_code != 200:
+        print("OWN FAILED TO GET RECIPES")
+        return False
+
+    added = False    
+    for recipe in resp.json():
+        if recipe[RECIPE_ID] == id:
+            added = True
+            break
+    if not added:
+        print("OWN FAILED TO ADD TO DB")
+        return False
+    
+    # update the title, include the recipe id because it's now known
+    DUMMY_RECIPE["title"] = "My Updated Title"
+    DUMMY_RECIPE[RECIPE_ID] = id
+    resp = requests.put(FLASK + OWN_RECIPE + username, json=DUMMY_RECIPE)
+    if resp.status_code != 200:
+        print("OWN FAILED TO PUT (UPDATE)")
+        return False
+
+    # check that it returned the right status
+    update_data = resp.json()
+    if update_data["status"] != "updated":
+        print("OWN FAILED UPDATE")
+        print(update_data["status"])
+        return False
+
+    # check if ES has the updated recipe
+    updated = get_recipe(id)
+    if updated["title"] != DUMMY_RECIPE["title"]:
+        print("OWN FAILED UPDATE ES")
+        return False
+
+    # recipe should be deleted
+    resp = requests.delete(FLASK + OWN_RECIPE + username, params={RECIPE_ID: id})
+    if resp.status_code != 200:
+        print("OWN FAILED DELETE")
+        return False
+
+    resp = requests.get(FLASK + GET_RECIPE + id)
+    if resp.status_code != 404:
+        print("OWN FAILED DELETE (STILL PRESENT)")
+        return False
+
+    return True
+
+def get_rand_recipe():
+    resp = requests.get(FLASK + TRENDING_RECIPE)
+    return resp.json()
+
+def get_recipe(id):
+    resp = requests.get(FLASK + GET_RECIPE + id)
+    return resp.json()
+
+def run_tests():
+    general_test(test_trending_recipe, "TREND PASS", "TREND FAIL", True)
+    general_test(test_get_recipe, "GET PASS", "GET FAIL", True)    
+    general_test(test_search, "SEARCH PASS", "SEARCH FAIL", True)
+    general_test(test_favorite, "ADD FAV PASS", "ADD FAV FAIL", False)
+    general_test(test_own, "OWN PASS", "OWN FAIL", False)
 
 if __name__ == '__main__':
     run_tests()
