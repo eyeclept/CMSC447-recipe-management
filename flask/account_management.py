@@ -1,23 +1,23 @@
-from flask_login import login_user, logout_user, current_user, login_required
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
-
-bcrypt = Bcrypt(app)
+from flask import Flask, request, jsonify
 
 # Registering as a new user
 @app.route('/register', methods=['POST'])
 def register():
-    given_username = request.form['username']
-    given_password = request.form['password']
+    data = request.get_json()  # Expecting JSON data from React frontend
+    given_username = data.get('username')
+    given_password = data.get('password')
 
     # Input validation
     if not given_username or not given_password:       
-        return 'Please enter a username and password.'
+        return jsonify({'message': 'Please enter a username and password.'}), 400
 
     # Check if username already exists
     existing_user = User.query.filter_by(username=given_username).first()
     if existing_user:
-        return 'Username already exists, please enter a different one.'
+        return jsonify({'message': 'Username already exists, please enter a different one.'}), 400
 
     try:
         # Hash the password
@@ -30,33 +30,49 @@ def register():
         db.session.add(new_user)
         db.session.commit()
 
-        return 'User registered successfully.'
+        return jsonify({'message': 'User registered successfully.'}), 201
     except Exception as e:
         # Rollback changes if an exception occurs
         db.session.rollback()
-        return f'Error registering user: {str(e)}'
+        return jsonify({'message': f'Error registering user: {str(e)}'}), 500
 
 
 # Logging in
+# React frontend will have to check if a token doesn't exist in local storage before calling this
 @app.route('/login', methods=['POST'])
 def login():
-    if current_user.is_authenticated:
-        return "User already logged in."
-
-    given_username = request.form['username']
-    given_password = request.form['password']
+    data = request.get_json()  # Expecting JSON data from React frontend
+    given_username = data.get('username')
+    given_password = data.get('password')
 
     # Query the database to find the user by username
     user = User.query.filter_by(username=given_username).first()
-    if user and bcrypt.check_password_hash(user.password, given_password):
-        login_user(user)
-        return 'Login successful.'
-    else:
-        return 'Invalid username or password.'
 
-#Logging Out
-@app.route('/logout')
-@login_required
+    # If the password associated with the username in the db matches the given password
+    if user and bcrypt.check_password_hash(user.password, given_password):
+        access_token = create_access_token(identity=user.username)
+        return jsonify({'access_token': access_token}), 200        # React wil need to store this
+    else:
+        return jsonify({'message': 'Invalid username or password.'}), 401
+
+# Logging Out
+# React frontend needs to check if a token exists
+@app.route('/logout', methods=['POST'])
+@jwt_required()
 def logout():
-    logout_user()
-    return 'Logged out successfully.'
+    # For JWT, logging out is handled on the client side by deleting the token.
+    return jsonify({'message': 'Logged out successfully.'}), 200
+
+""" 
+Below is an example of using a JWT to get the logged in user's recipes from the recipe db
+React frontend will have to check if a token doesn't exist in local storage before calling this
+React frontend will have to check if the token isn't expired before calling this
+If the token is expired, react needs to delete the token and then redirect to login
+@app.route('/recipes/user', methods=['GET'])
+@jwt_required()
+def get_user_recipes():
+    current_user = get_jwt_identity()
+    recipes = Recipe.query.filter_by(username=current_user).all()
+    recipes_list = [{'recipe_id': recipe.recipe_id, 'picture': recipe.picture} for recipe in recipes]
+    return jsonify({'recipes': recipes_list}), 200
+"""

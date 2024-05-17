@@ -1,21 +1,24 @@
-import csv
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from flask_login, import LoginManager, UserMixin
+from flask_jwt_extended import JWTManager
+from flask_bcrypt import Bcrypt
 from flask_restful import Api
+from datetime import timedelta
 import random
 from constants import *
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://projectuser:localhost:3306/projectdb447'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://projectuser:changeme@localhost:3306/projectdb447'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['JWT_SECRET_KEY'] = 'jwt_secret_key'    # Should be something better
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
 
 db = SQLAlchemy(app)
+bcrypt = Bcrypt(app)
+jwt = JWTManager(app)
 FAKE_ES = {}
-login_manager = LoginManager()
-login_manager.init_app(app)
 
-class User(UserMixin, db.Model):
+class User(db.Model):
     username = db.Column(db.String(255), primary_key=True, nullable=False)
     password = db.Column(db.String(255))
     is_admin = db.Column(db.Boolean)
@@ -50,7 +53,3 @@ def stubbed_elasticsearch_call(*args, **kwargs):
     if all([isinstance(x, int) for x in args]):
         return {x:FAKE_ES[x] for x in args}
     return FAKE_ES
-
-@login_manager.user_loader
-def load_user(username):
-    return User.query.get(username)

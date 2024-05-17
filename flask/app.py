@@ -65,4 +65,3 @@ api.add_resource(RateRecipe, "/recipes/rate")
 
 if __name__ == '__main__':
     app.run(debug=True)
-
