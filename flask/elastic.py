@@ -17,9 +17,9 @@ from constants import *
 # Setup connection to Elasticsearch on Docker
 BASE_ELASTIC_INFO = Elasticsearch(
     hosts=["https://localhost:9200"],
-    basic_auth=('elastic', 'changeme'),
+    basic_auth=('elastic', 'ag80tinh5BKN-bBL2s0x'),
     ca_certs="flask/http_ca.crt",
-    #verify_certs=False
+    verify_certs=False
 )
 
 
@@ -141,21 +141,24 @@ def get_random_document(indexName="recipes", es=BASE_ELASTIC_INFO):
             }
         }
     }
-    # redo this as well
-    resp = es.search(index=indexName, query=rand_query, size=1)
-    for hit in resp['hits']['hits']:
-        doc = hit['_source']
-        doc[RECIPE_ID] = hit['_id']
-        return doc
-    return {
-        RECIPE_ID: -1,
-        "title": "The Empty Recipe",
-        "ingredients": ["Backend Dev's Tears"],
-        "directions": "Step one: delete all other recipes.",
-        "description": "This should never be returned",
-        "keywords": ["uh oh"]
-    }
+    try:
+        resp = es.search(index=indexName, query=rand_query, size=1)
+        for hit in resp['hits']['hits']:
+            doc = hit['_source']
+            doc[RECIPE_ID] = hit['_id']
+            return doc
+    except:
+        return {
+            RECIPE_ID: "-1",
+            "title": "The Empty Recipe",
+            "ingredients": ["Backend Dev's Tears"],
+            "directions": "Step one: delete all other recipes.",
+            "description": "This should never be returned",
+            "keywords": ["uh oh"]
+        }
 
+def drop_index(index_name="recipes", es=BASE_ELASTIC_INFO):
+    print(es.indices.delete(index=index_name))
 
 def main():
     csvFile = "flask/RecipeNLG_dataset.csv"

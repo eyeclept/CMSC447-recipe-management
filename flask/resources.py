@@ -1,6 +1,5 @@
 from flask import request, jsonify
-from flask_restful import Resource
-import sqlalchemy
+from flask_restful import Resource, output_json
 from webargs import fields
 from webargs.flaskparser import use_kwargs
 from sqlalchemy import update, text
@@ -13,16 +12,15 @@ class GetRecipe(Resource):
 
         recipe:Recipe = db.session.get(Recipe, recipe_id)
         if not recipe:
-            return 404
+            return {"error":"recipe not in db"}, 404
         
-        """This should return the document in elastic search with the given ID"""
         try:
             recipe_doc = get_document(recipe_id)
             recipe_doc[PICTURE] = recipe.picture
 
             return recipe_doc
         except:
-            return 404
+            return {"error":"couldn't get recipe data"}, 404
 
 
 class TrendingRecipe(Resource):
@@ -32,7 +30,7 @@ class TrendingRecipe(Resource):
         """
 
         """This returns some (random) recipe from elasticsearch"""
-        return get_random_document()
+        return jsonify(get_random_document())
 
 
 class SearchRecipes(Resource):

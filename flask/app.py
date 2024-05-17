@@ -20,42 +20,62 @@ def hello_world():
         print(r)
     return "<p>Hello, World!</p>"
 
-with app.app_context():
-    # Creates all the tables in the database
-    db.create_all()
+@app.route("/drop")
+def drop_es():
+    drop_index()
+    return "dropped es"
 
-    # Check if the default user already exists
-    existing_user = User.query.filter_by(username='default').first()
-    if existing_user is None:
-        # Create the default user
-        new_user = User(username='default', password='default', is_admin=False)   
-        # Add the user to the database session
-        db.session.add(new_user) 
-        db.session.commit()
+@app.route("/sanity")
+def get_all_recipe():
+    with db.engine.connect() as conn:
+        r = conn.execute(text("SELECT * FROM recipe"))
+        recipes = []
+        for row in r:
+            recipes.append(str(row))
+        return recipes
 
-   # Check if the Recipe table is empty
-    if not Recipe.query.first():
-        # Read the first 10 rows of the pre-existing recipes from RecipeNLG_dataset.csv and insert into recipe table
-        with open('RecipeNLG_dataset.csv', newline='') as csvfile:
-            reader = csv.reader(csvfile)
-            # Skip header row
-            next(reader)  
-            # Counter variable to keep track of rows read
-            count = 0
-            for row in reader:
-                # Break the loop if 10 rows have been read
-                if count >= 10:
-                    break
-                # The first column contains the recipe IDs
-                id = int(row[0])
-                FAKE_ES[id] = {}
-                FAKE_ES[id]['title'] = row[1]
-                # The default username for pre-existing recipes is 'default', there are no associated pictures
-                recipe = Recipe(recipe_id=id, username='default', picture=None)
-                db.session.add(recipe)
-                count += 1
-        db.session.commit()
+@app.route("/init")
+def init():    
+    with app.app_context():
+        # Creates all the tables in the database
+        db.create_all()
 
+        # Check if the default user already exists
+        existing_user = User.query.filter_by(username='default').first()
+        if existing_user is None:
+            # Create the default user
+            new_user = User(username='default', password='default', is_admin=False)   
+            # Add the user to the database session
+            db.session.add(new_user) 
+            db.session.commit()
+
+    # Check if the Recipe table is empty
+        if not Recipe.query.first():
+            with open('RecipeNLG_dataset.csv', newline='') as csvfile:
+                reader = csv.reader(csvfile)
+                # Skip header row
+                next(reader)  
+                # Counter variable to keep track of rows read
+                count = 0
+                for row in reader:
+                    # Break the loop if 10 rows have been read
+                    if count >= 50:
+                        break
+
+                    doc = {
+                        "title": row[1],
+                        "ingredients": row[2],
+                        "directions": row[3],
+                        "description": "",
+                        "keywords": []
+                    }
+                    id = insert_document(doc)
+                    # The default username for pre-existing recipes is 'default', there are no associated pictures
+                    recipe = Recipe(recipe_id=id, username='default', picture=None)
+                    db.session.add(recipe)
+                    count += 1
+                db.session.commit()
+    return "Done"
 
 api.add_resource(GetRecipe, "/recipes/single/<recipe_id>")
 api.add_resource(TrendingRecipe, "/recipes/trending")

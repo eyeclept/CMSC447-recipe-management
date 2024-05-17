@@ -27,7 +27,7 @@ class User(db.Model):
     favorites = db.relationship('Favorite', backref='user')
 
 class Recipe(db.Model):
-    recipe_id = db.Column(db.Integer, primary_key=True, autoincrement=True, nullable=False)
+    recipe_id = db.Column(db.String(128), primary_key=True)
     username = db.Column(db.String(255), db.ForeignKey('user.username'))
     picture = db.Column(db.LargeBinary)
     reviews_1 = db.relationship('Review', backref='recipe')
