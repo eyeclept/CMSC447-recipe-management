@@ -30,7 +30,7 @@ class TrendingRecipe(Resource):
         """
 
         """This returns some (random) recipe from elasticsearch"""
-        return jsonify(get_random_document())
+        return get_random_document()
 
 
 class SearchRecipes(Resource):
@@ -60,21 +60,26 @@ class FavoriteRecipes(Resource):
                 continue
         return res
 
-    @use_kwargs({RECIPE_ID: fields.Integer(required=True)}, location="query")
+    @use_kwargs({RECIPE_ID: fields.String(required=True)}, location="query")
     def put(self, username, **kwargs):
         """
         add a recipe to a user's favorites
         """
-        if db.session.get(Favorite, kwargs[RECIPE_ID]):
+        if db.session.get(Favorite, {"username": username, "recipe_id": kwargs[RECIPE_ID]}):
             return 200
         
-        fav:Favorite = Favorite(username=username, recipe_id=kwargs[RECIPE_ID])
-        db.session.add(fav)
-        db.session.commit()
+        try:
+            fav:Favorite = Favorite(username=username, recipe_id=kwargs[RECIPE_ID])
+            db.session.add(fav)
+            db.session.commit()
+        except:
+            db.session.rollback()
+            return {"message": "could not find recipe to add",
+                    "recipe_id": kwargs[RECIPE_ID]}, 404
 
         return 200
 
-    @use_kwargs({RECIPE_ID: fields.Integer(required=True)}, location="query")
+    @use_kwargs({RECIPE_ID: fields.String(required=True)}, location="query")
     def delete(self, username, **kwargs):
         """
         remove a recipe from a user's favorites
@@ -122,19 +127,19 @@ class OwnRecipes(Resource):
                     ]
                 )
                 db.session.commit()
-                res = update_document(json_data[RECIPE_ID], json_data[RECIPE])
-                return {"status": res}
+            res = update_document(json_data.pop(RECIPE_ID), json_data)
+            return {"status": res}, 200
         else:
-            id = insert_document(json_data[RECIPE])
+            id = insert_document(json_data)
 
             picture = json_data.pop(PICTURE, None)
             recipe = Recipe(recipe_id=id, username=username, picture=picture)
             db.session.add(recipe)
             db.session.commit()
 
-        return 200
+            return {"status": "inserted", "recipe_id": id}, 200
     
-    @use_kwargs({RECIPE_ID: fields.Integer(required=True)}, location="query")
+    @use_kwargs({RECIPE_ID: fields.String(required=True)}, location="query")
     def delete(self, username, **kwargs):
         """
         delete a recipe
@@ -156,12 +161,12 @@ class OwnRecipes(Resource):
 
 class RateRecipe(Resource):
     review_fields = {
-        RECIPE_ID: fields.Integer(required=True),
+        RECIPE_ID: fields.String(required=True),
         USERNAME: fields.String(required=True),
         RATING: fields.Boolean(required=False, default=True)
     }
 
-    @use_kwargs({RECIPE_ID: fields.Integer(required=True)}, location="query")
+    @use_kwargs({RECIPE_ID: fields.String(required=True)}, location="query")
     def get(self, **kwargs):
         """
         Get number of good recipe ratings

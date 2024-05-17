@@ -32,6 +32,10 @@ def get_all_recipe():
         recipes = []
         for row in r:
             recipes.append(str(row))
+
+        tables = conn.execute(text("SELECT name FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%';"))
+        for row in tables:
+            recipes.append(str(row))
         return recipes
 
 @app.route("/init")
