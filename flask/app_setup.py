@@ -35,12 +35,12 @@ class Recipe(db.Model):
 
 class Review(db.Model):
     username = db.Column(db.String(255), db.ForeignKey('user.username'), primary_key=True)
-    recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.recipe_id'), primary_key=True)
+    recipe_id = db.Column(db.String(128), db.ForeignKey('recipe.recipe_id'), primary_key=True)
     rating = db.Column(db.Boolean)
 
 class Favorite(db.Model):
     username = db.Column(db.String(255), db.ForeignKey('user.username'), primary_key=True)
-    recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.recipe_id'), primary_key=True)
+    recipe_id = db.Column(db.String(128), db.ForeignKey('recipe.recipe_id'), primary_key=True)
 
 
 def stubbed_elasticsearch_call(*args, **kwargs):

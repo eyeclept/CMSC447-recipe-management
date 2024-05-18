@@ -3,6 +3,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask import Flask, request, jsonify
 
+from app_setup import *
+
 # Registering as a new user
 @app.route('/register', methods=['POST'])
 def register():
