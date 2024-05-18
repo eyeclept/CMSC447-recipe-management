@@ -42,14 +42,15 @@ class Favorite(db.Model):
     username = db.Column(db.String(255), db.ForeignKey('user.username'), primary_key=True)
     recipe_id = db.Column(db.String(128), db.ForeignKey('recipe.recipe_id'), primary_key=True)
 
-
+"""
 def stubbed_elasticsearch_call(*args, **kwargs):
-    """
-    For now, placeholder function for ES
-    """
+    
+    #For now, placeholder function for ES
+    
     
     if RECIPE_ID in kwargs:
         return FAKE_ES[kwargs[RECIPE_ID]]
     if all([isinstance(x, int) for x in args]):
         return {x:FAKE_ES[x] for x in args}
     return FAKE_ES
+"""
