@@ -1,24 +1,27 @@
 from flask import request, jsonify
-from flask_restful import Resource
-import sqlalchemy
+from flask_restful import Resource, output_json
 from webargs import fields
 from webargs.flaskparser import use_kwargs
 from sqlalchemy import update, text
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from app_setup import *
 from constants import *
+from elastic import *
 
 class GetRecipe(Resource):
     def get(self, recipe_id):
 
         recipe:Recipe = db.session.get(Recipe, recipe_id)
         if not recipe:
-            return 404
+            return {"error":"recipe not in db"}, 404
         
-        """This should return the document in elastic search with the given ID"""
-        recipe_doc = stubbed_elasticsearch_call(recipe_id)
-        recipe_doc[PICTURE] = recipe.picture
+        try:
+            recipe_doc = get_document(recipe_id)
+            recipe_doc[PICTURE] = recipe.picture
 
-        return recipe_doc
+            return recipe_doc
+        except:
+            return {"error":"couldn't get recipe data"}, 404
 
 
 class TrendingRecipe(Resource):
@@ -28,53 +31,75 @@ class TrendingRecipe(Resource):
         """
 
         """This returns some (random) recipe from elasticsearch"""
-        return stubbed_elasticsearch_call()
+        return get_random_document()
 
 
 class SearchRecipes(Resource):
     
-    @use_kwargs({QUERY: fields.String()}, location="query")
+    @use_kwargs({QUERY: fields.String(required=True)}, location="query")
     def get(self, **kwargs):
         """
         Make an ES call for the search and return the results
         """        
-        return stubbed_elasticsearch_call(kwargs["query"])
+        return search_data(kwargs[QUERY])
 
 
 class FavoriteRecipes(Resource):
 
+    @jwt_required()
     def get(self, username):
         """
         get a list of the ids of a user's favorite recipes
         """
         user:User = db.session.get(User, username)
-
-        ids = []
+        current_user = get_jwt_identity()
+        if current_user != username and not user.is_admin:
+            return {"message": "You do not have permission to view this"}, 401
+        res = []
         for r in user.favorites:
-            ids.append(r.recipe_id)
+            id = r.recipe_id
+            try:
+                res.append(get_document(id))
+            except:
+                continue
+        return res
 
-        """This should return all recipes with id's in the passed list"""
-        return stubbed_elasticsearch_call(*ids)
-
-    @use_kwargs({RECIPE_ID: fields.Integer(required=True)}, location="query")
+    @use_kwargs({RECIPE_ID: fields.String(required=True)}, location="query")
+    @jwt_required()
     def put(self, username, **kwargs):
         """
         add a recipe to a user's favorites
         """
-        if db.session.get(Favorite, kwargs[RECIPE_ID]):
+        user:User = db.session.get(User, username)
+        current_user = get_jwt_identity()
+        if current_user != username and not user.is_admin:
+            return {"message": "You do not have permission to view this"}, 401
+        
+        if db.session.get(Favorite, {"username": username, "recipe_id": kwargs[RECIPE_ID]}):
             return 200
         
-        fav:Favorite = Favorite(username=username, recipe_id=kwargs[RECIPE_ID])
-        db.session.add(fav)
-        db.session.commit()
+        try:
+            fav:Favorite = Favorite(username=username, recipe_id=kwargs[RECIPE_ID])
+            db.session.add(fav)
+            db.session.commit()
+        except:
+            db.session.rollback()
+            return {"message": "could not find recipe to add",
+                    "recipe_id": kwargs[RECIPE_ID]}, 404
 
         return 200
 
-    @use_kwargs({RECIPE_ID: fields.Integer(required=True)}, location="query")
+    @use_kwargs({RECIPE_ID: fields.String(required=True)}, location="query")
+    @jwt_required()
     def delete(self, username, **kwargs):
         """
         remove a recipe from a user's favorites
         """
+        user:User = db.session.get(User, username)
+        current_user = get_jwt_identity()
+        if current_user != username and not user.is_admin:
+            return {"message": "You do not have permission to delete this"}, 401
+        
         fav = db.session.get(Favorite, {USERNAME:username, RECIPE_ID:kwargs[RECIPE_ID]})
         db.session.delete(fav)
         db.session.commit()
@@ -84,23 +109,34 @@ class FavoriteRecipes(Resource):
 
 class OwnRecipes(Resource):
 
+    @jwt_required()
     def get(self, username):
         """
         get all ids of recipes created by user
         """
         user:User = db.session.get(User, username)
-
-        ids = []
-        for r in user.recipes:
-            ids.append(r.recipe_id)
+        current_user = get_jwt_identity()
+        if current_user != username and not user.is_admin:
+            return {"message": "You do not have permission to delete this"}, 401
         
-        """This can be the exact same call as in the get for FavoriteRecipes"""
-        return stubbed_elasticsearch_call(*ids)
+        results = []
+        for r in user.recipes:
+            id = r.recipe_id
+            try:
+                results.append(get_document(id))
+            except:
+                continue        
+        return results
 
+    @jwt_required()
     def put(self, username):
         """
         create a recipe
         """
+        user:User = db.session.get(User, username)
+        current_user = get_jwt_identity()
+        if current_user != username and not user.is_admin:
+            return {"message": "You do not have permission to delete this"}, 401
         json_data:dict = request.get_json(force=True)
 
         # if an id is passed, then the recipe must exist already
@@ -116,47 +152,52 @@ class OwnRecipes(Resource):
                     ]
                 )
                 db.session.commit()
-
+            res = update_document(json_data.pop(RECIPE_ID), json_data)
+            return {"status": res}, 200
         else:
-            # have to get the id from elasticsearch, not this placeholder
-            """ The actual order of operations should be insert into Elastic-
-                Search FIRST, then get the id from the newly inserted field,
-                and then add it to the database.
-            """
-            id = random.randint(100,1000)
-            FAKE_ES[id] = json_data[RECIPE]
+            id = insert_document(json_data)
 
             picture = json_data.pop(PICTURE, None)
             recipe = Recipe(recipe_id=id, username=username, picture=picture)
             db.session.add(recipe)
             db.session.commit()
 
-        return "done"
+            return {"status": "inserted", "recipe_id": id}, 200
     
-    @use_kwargs({RECIPE_ID: fields.Integer(required=True)}, location="query")
+    @use_kwargs({RECIPE_ID: fields.String(required=True)}, location="query")
+    @jwt_required()
     def delete(self, username, **kwargs):
         """
         delete a recipe
         """
+        user:User = db.session.get(User, username)
+        current_user = get_jwt_identity()
+        if current_user != username and not user.is_admin:
+            return {"message": "You do not have permission to delete this"}, 401
+        
         recipe = db.session.get(Recipe, kwargs[RECIPE_ID])
         if not recipe:
             return 200
-        """Delete from ElasticSearch where recipe_id matches"""
-        es = stubbed_elasticsearch_call(**kwargs)
-
+        
+        # if this fails, then the recipe id doesn't exist, which is the desired state
+        try:
+            delete_document(kwargs[RECIPE_ID])
+        except:
+            pass
+        
         db.session.delete(recipe)
         db.session.commit()
-        return es
+        return 200
 
-
+# Not implemented at time of project completion
 class RateRecipe(Resource):
     review_fields = {
-        RECIPE_ID: fields.Integer(required=True),
+        RECIPE_ID: fields.String(required=True),
         USERNAME: fields.String(required=True),
         RATING: fields.Boolean(required=False, default=True)
     }
 
-    @use_kwargs({RECIPE_ID: fields.Integer(required=True)}, location="query")
+    @use_kwargs({RECIPE_ID: fields.String(required=True)}, location="query")
     def get(self, **kwargs):
         """
         Get number of good recipe ratings

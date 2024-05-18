@@ -1,7 +1,8 @@
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
-from flask_sqlalchemy import SQLAlchemy
-from flask_bcrypt import Bcrypt
-from flask import Flask, request, jsonify
+from flask_jwt_extended import create_access_token, jwt_required
+from flask import request, jsonify
+
+from app_setup import *
+
 
 # Registering as a new user
 @app.route('/register', methods=['POST'])
@@ -11,20 +12,26 @@ def register():
     given_password = data.get('password')
 
     # Input validation
-    if not given_username or not given_password:       
-        return jsonify({'message': 'Please enter a username and password.'}), 400
+    if not given_username or not given_password:
+        return jsonify({'message': 'Please enter a username and password.'
+                       }), 400
 
     # Check if username already exists
     existing_user = User.query.filter_by(username=given_username).first()
     if existing_user:
-        return jsonify({'message': 'Username already exists, please enter a different one.'}), 400
+        return jsonify({
+            'message': 'Username already exists, please enter a different one.'
+        }), 400
 
     try:
         # Hash the password
-        hashed_password = bcrypt.generate_password_hash(given_password).decode('utf-8')
+        hashed_password = bcrypt.generate_password_hash(given_password).decode(
+            'utf-8')
 
         # Create the new user
-        new_user = User(username=given_username, password=hashed_password, is_admin=False)
+        new_user = User(username=given_username,
+                        password=hashed_password,
+                        is_admin=False)
 
         # Add the user to the database session
         db.session.add(new_user)
@@ -51,9 +58,11 @@ def login():
     # If the password associated with the username in the db matches the given password
     if user and bcrypt.check_password_hash(user.password, given_password):
         access_token = create_access_token(identity=user.username)
-        return jsonify({'access_token': access_token}), 200        # React wil need to store this
+        return jsonify({'access_token': access_token
+                       }), 200  # React wil need to store this
     else:
         return jsonify({'message': 'Invalid username or password.'}), 401
+
 
 # Logging Out
 # React frontend needs to check if a token exists
@@ -62,6 +71,7 @@ def login():
 def logout():
     # For JWT, logging out is handled on the client side by deleting the token.
     return jsonify({'message': 'Logged out successfully.'}), 200
+
 
 """ 
 Below is an example of using a JWT to get the logged in user's recipes from the recipe db
