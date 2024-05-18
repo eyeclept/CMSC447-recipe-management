@@ -2,8 +2,6 @@
 Taken from another branch ahead of time to have classes available
 """
 import csv
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 from flask_restful import Api
 
 from app_setup import *
@@ -13,10 +11,8 @@ from elastic import *
 
 api = Api(app)
 
-default_creds = {
-    "username": "",
-    "password": ""
-}
+default_creds = {"username": "", "password": ""}
+
 
 @app.route("/")
 def hello_world():
@@ -25,10 +21,12 @@ def hello_world():
         print(r)
     return "<p>Hello, World!</p>"
 
+
 @app.route("/drop")
 def drop_es():
     drop_index()
     return "dropped es"
+
 
 @app.route("/sanity")
 def get_all_recipe():
@@ -40,8 +38,9 @@ def get_all_recipe():
 
         return recipes
 
+
 @app.route("/init")
-def init():    
+def init():
     with app.app_context():
         # Creates all the tables in the database
         try:
@@ -50,15 +49,18 @@ def init():
         except:
             pass
         db.create_all()
-        
+
         # Check if the default user already exists
         existing_user = User.query.filter_by(username='default').first()
         if existing_user is None:
             # Create the default user
-            hashed_password = bcrypt.generate_password_hash(default_creds["password"]).decode('utf-8')
-            new_user = User(username=default_creds["username"], password=hashed_password, is_admin=True)   
+            hashed_password = bcrypt.generate_password_hash(
+                default_creds["password"]).decode('utf-8')
+            new_user = User(username=default_creds["username"],
+                            password=hashed_password,
+                            is_admin=True)
             # Add the user to the database session
-            db.session.add(new_user) 
+            db.session.add(new_user)
             db.session.commit()
 
     # Check if the Recipe table is empty
@@ -66,7 +68,7 @@ def init():
             with open('RecipeNLG_dataset.csv', newline='') as csvfile:
                 reader = csv.reader(csvfile)
                 # Skip header row
-                next(reader)  
+                next(reader)
                 # Counter variable to keep track of rows read
                 count = 0
                 for row in reader:
@@ -83,11 +85,14 @@ def init():
                     }
                     id = insert_document(doc)
                     # The default username for pre-existing recipes is 'default', there are no associated pictures
-                    recipe = Recipe(recipe_id=id, username='default', picture=None)
+                    recipe = Recipe(recipe_id=id,
+                                    username='default',
+                                    picture=None)
                     db.session.add(recipe)
                     count += 1
                 db.session.commit()
     return "Done"
+
 
 api.add_resource(GetRecipe, "/recipes/single/<recipe_id>")
 api.add_resource(TrendingRecipe, "/recipes/trending")

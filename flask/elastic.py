@@ -15,12 +15,10 @@ from random import randint
 from constants import *
 
 # Setup connection to Elasticsearch on Docker
-BASE_ELASTIC_INFO = Elasticsearch(
-    hosts=["https://localhost:9200"],
-    basic_auth=('elastic', 'changeme'),
-    ca_certs="flask/http_ca.crt",
-    verify_certs=False
-)
+BASE_ELASTIC_INFO = Elasticsearch(hosts=["https://localhost:9200"],
+                                  basic_auth=('elastic', 'changeme'),
+                                  ca_certs="flask/http_ca.crt",
+                                  verify_certs=False)
 
 
 def index_data_from_csv(csvFile,
@@ -115,7 +113,9 @@ def refresh_index(indexName="recipes", es=BASE_ELASTIC_INFO):
     es.indices.refresh(index=indexName)
 
 
-def delete_document(documentId, indexName="recipes", es=BASE_ELASTIC_INFO) -> str:
+def delete_document(documentId,
+                    indexName="recipes",
+                    es=BASE_ELASTIC_INFO) -> str:
     """
     Delete a document by its ID.
 
@@ -157,8 +157,10 @@ def get_random_document(indexName="recipes", es=BASE_ELASTIC_INFO):
             "keywords": ["uh oh"]
         }
 
+
 def drop_index(index_name="recipes", es=BASE_ELASTIC_INFO):
     print(es.indices.delete(index=index_name))
+
 
 def main():
     csvFile = "flask/RecipeNLG_dataset.csv"
@@ -174,7 +176,10 @@ def main():
     print(get_document(documentId))
 
     # Update document
-    updateFields = {'title': 'Updated title here...', 'timestamp': datetime.now()}
+    updateFields = {
+        'title': 'Updated title here...',
+        'timestamp': datetime.now()
+    }
     print(update_document(documentId, updateFields))
 
     get_document(documentId=documentId)
@@ -183,13 +188,13 @@ def main():
     print(len(search_data("ksajfld;")))
 
     document = {
-            "title": "ex title",
-            "ingredients": ["potatoes", "broccoli"],
-            "directions": "My very good directions",
-            "description": "",
-            "keywords": []
-        }
-    
+        "title": "ex title",
+        "ingredients": ["potatoes", "broccoli"],
+        "directions": "My very good directions",
+        "description": "",
+        "keywords": []
+    }
+
     new_doc = insert_document(document)
 
     print(get_document(new_doc))
@@ -201,6 +206,7 @@ def main():
         get_document(new_doc)
     except:
         print("Document was successfully deleted!")
+
 
 if __name__ == "__main__":
     main()
