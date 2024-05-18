@@ -42,8 +42,13 @@ def get_all_recipe():
 def init():    
     with app.app_context():
         # Creates all the tables in the database
+        try:
+            db.drop_all()
+            drop_es()
+        except:
+            pass
         db.create_all()
-
+        
         # Check if the default user already exists
         existing_user = User.query.filter_by(username='default').first()
         if existing_user is None:

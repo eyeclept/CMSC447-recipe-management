@@ -1,6 +1,4 @@
 import requests
-from urllib import parse
-from urllib.parse import quote
 
 FLASK = "http://localhost:5000"
 GET_RECIPE = "/recipes/single/"
