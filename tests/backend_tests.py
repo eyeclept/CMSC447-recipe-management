@@ -1,4 +1,5 @@
 import requests
+from getpass import getpass
 
 FLASK = "http://localhost:5000"
 GET_RECIPE = "/recipes/single/"
@@ -7,13 +8,28 @@ SEARCH_RECIPE = "/recipes/search"
 FAV_RECIPE = "/recipes/favorites/"
 OWN_RECIPE = "/recipes/user/"
 RATE_RECIPE = "/recipes/rate"
+LOGIN = "/login"
 
 RECIPE_ID = "recipe_id"
 TITLE = "title"
 
+def get_jwt_token(username="default", password=None):
+    # it's expected that you know the login creds for this
+    if not password:
+        password = getpass("Enter password: ")
+    creds = {
+        "username": username,
+        "password": password
+    }
+    resp = requests.post(FLASK + LOGIN, json=creds)
+    assert resp.status_code == 200 and "access_token" in resp.json()
+    return resp.json()["access_token"]
+
+JWT_TOKEN = get_jwt_token() # a little gross but easier
+JWT_HEADER = {"Authorization": f"Bearer {JWT_TOKEN}"}
+
 def general_test(test_func, pass_text="TEST PASSED", fail_text="TEST FAILED", quiet=True):
     print(pass_text) if test_func(quiet) else print(fail_text)
-
 
 def test_trending_recipe(quiet=True):
     resp_1 = requests.get(FLASK + TRENDING_RECIPE)
@@ -62,14 +78,14 @@ def test_favorite(quiet=True):
     rand_rec = get_rand_recipe()
     rec_id = rand_rec[RECIPE_ID]
     username="default"
-    resp = requests.put(FLASK + FAV_RECIPE + username, params={RECIPE_ID: rec_id})
+    resp = requests.put(FLASK + FAV_RECIPE + username, params={RECIPE_ID: rec_id}, headers=JWT_HEADER)
 
     if resp.status_code != 200:
         print("FAVORITE FAIL INSERT")
         print(resp.text)
         return False
 
-    resp = requests.get(FLASK + FAV_RECIPE + username)
+    resp = requests.get(FLASK + FAV_RECIPE + username, headers=JWT_HEADER)
     if resp.status_code != 200:
         print("FAVORITE FAIL GET")
 
@@ -84,12 +100,12 @@ def test_favorite(quiet=True):
         print("FAVORITE FAILED TO INSERT")
         return False
 
-    resp = requests.delete(FLASK + FAV_RECIPE + username, params={RECIPE_ID: rec_id})
+    resp = requests.delete(FLASK + FAV_RECIPE + username, params={RECIPE_ID: rec_id}, headers=JWT_HEADER)
     if resp.status_code != 200:
         print("FAVORITE FAIL DELETE")
         return False
     
-    resp = requests.get(FLASK + FAV_RECIPE + username)
+    resp = requests.get(FLASK + FAV_RECIPE + username, headers=JWT_HEADER)
     if resp.status_code != 200:
         print("FAVORITE FAIL GET")
 
@@ -113,7 +129,7 @@ def test_own(quiet=True):
     username = "default"
 
     # put a recipe
-    resp = requests.put(FLASK + OWN_RECIPE + username, json=DUMMY_RECIPE)
+    resp = requests.put(FLASK + OWN_RECIPE + username, json=DUMMY_RECIPE, headers=JWT_HEADER)
     if resp.status_code != 200:
         print("OWN FAILED TO PUT")
         print(resp.text)
@@ -123,7 +139,7 @@ def test_own(quiet=True):
     id = resp_data[RECIPE_ID]
 
     # check if it got added to db
-    resp = requests.get(FLASK + OWN_RECIPE + username)
+    resp = requests.get(FLASK + OWN_RECIPE + username, headers=JWT_HEADER)
     if resp.status_code != 200:
         print("OWN FAILED TO GET RECIPES")
         return False
@@ -140,7 +156,7 @@ def test_own(quiet=True):
     # update the title, include the recipe id because it's now known
     DUMMY_RECIPE["title"] = "My Updated Title"
     DUMMY_RECIPE[RECIPE_ID] = id
-    resp = requests.put(FLASK + OWN_RECIPE + username, json=DUMMY_RECIPE)
+    resp = requests.put(FLASK + OWN_RECIPE + username, json=DUMMY_RECIPE, headers=JWT_HEADER)
     if resp.status_code != 200:
         print("OWN FAILED TO PUT (UPDATE)")
         return False
@@ -159,7 +175,7 @@ def test_own(quiet=True):
         return False
 
     # recipe should be deleted
-    resp = requests.delete(FLASK + OWN_RECIPE + username, params={RECIPE_ID: id})
+    resp = requests.delete(FLASK + OWN_RECIPE + username, params={RECIPE_ID: id}, headers=JWT_HEADER)
     if resp.status_code != 200:
         print("OWN FAILED DELETE")
         return False
@@ -179,12 +195,17 @@ def get_recipe(id):
     resp = requests.get(FLASK + GET_RECIPE + id)
     return resp.json()
 
+
+
+
 def run_tests():
+    
     general_test(test_trending_recipe, "TREND PASS", "TREND FAIL", True)
     general_test(test_get_recipe, "GET PASS", "GET FAIL", True)    
     general_test(test_search, "SEARCH PASS", "SEARCH FAIL", True)
     general_test(test_favorite, "ADD FAV PASS", "ADD FAV FAIL", False)
     general_test(test_own, "OWN PASS", "OWN FAIL", False)
-
+    
+    
 if __name__ == '__main__':
     run_tests()
