@@ -7,8 +7,9 @@ Hopefully, this gets updated before the project is submitted. While in developme
 0. Install docker on your system and start the docker engine
 1. Run `source installElasticDocker.sh` and `installMariaDBDocker.sh`
 2. Run `docker exec -it elasticsearch /usr/share/elasticsearch/bin/elasticsearch-reset-password -u elastic`. You should see a string outputted to the terminal, something like `kl61qgnh5BKN-bUL2s0x` -- this is the password for elasticsearch
-3. Copy the password from step 2 to the second value in the tuple declaring the basic_auth argument of ElasticSearch(...) in `elastic.py`. Yes, this is not best practice. If you're just running locally, it's not a big deal -- in any case, try to remember not to commit it.
-4. Run `pip install -r flask/requirements.txt` and `pip install -r tests/requirements.txt`
+3. Run `docker cp elasticsearch:/usr/share/elasticsearch/config/certs/http_ca.crt flask`
+4. Copy the password from step 2 to the second value in the tuple declaring the basic_auth argument of ElasticSearch(...) in `elastic.py`. Yes, this is not best practice. If you're just running locally, it's not a big deal -- in any case, try to remember not to commit it.
+5. Run `pip install -r flask/requirements.txt` and `pip install -r tests/requirements.txt`
 
 At this point, you are ready to begin development
 
