@@ -14,7 +14,7 @@ RECIPE_ID = "recipe_id"
 TITLE = "title"
 
 
-def get_jwt_token(username="default", password=None):
+def get_jwt_token(username="Sam", password=None):
     # it's expected that you know the login creds for this
     if not password:
         password = getpass("Enter password: ")
@@ -83,7 +83,7 @@ def test_search(quiet=True):
 def test_favorite(quiet=True):
     rand_rec = get_rand_recipe()
     rec_id = rand_rec[RECIPE_ID]
-    username = "default"
+    username = "Sam"
     resp = requests.put(FLASK + FAV_RECIPE + username,
                         params={RECIPE_ID: rec_id},
                         headers=JWT_HEADER)
@@ -136,7 +136,7 @@ def test_own(quiet=True):
         "description": "blah blah description",
         "keywords": ["some", "keywords", "here"]
     }
-    username = "default"
+    username = "Sam"
 
     # put a recipe
     resp = requests.put(FLASK + OWN_RECIPE + username,

@@ -10,9 +10,8 @@ import './index.css'
 
 
 function logout(){
-  setToken('')
   localStorage.removeItem('recipe-manager-token')
-
+  changeURL('/')
 }
 
 
@@ -49,27 +48,20 @@ function HomePage(){
   const [data, setData] = useState([]);
   useEffect(() => {
       const fetchRandom = async () => {
-        //try{
-          //const response = await fetch('/recipes/trending');
-          //if(!response.ok){
-            //throw new Error("Failed to Fetch Data");
-          //}
-          const recipe = {'description': '',
-          'directions': '["In saucepan slowly stir the chicken broth into cornstarch. '/
-                        'Cook, stirring constantly, until slightly thickened.", "Slowly '/
-                        'pour in the well beaten egg; stir once gently.", "Remove from '/
-                        'heat. Garnish with sliced green onion.", "Makes 4 servings."]',
-          'ingredients': '["2 (13 3/4 oz.) cans chicken broth", "1 Tbsp. cornstarch", '/
-                         '"1 well beaten egg", "2 Tbsp. sliced (1/4-inch) green onion"]',
-          'keywords': '',
-          'recipe_id': '78',
-          'title': 'Egg Drop Soup'};//await response.json();
+        try{
+          const response = await fetch('http://localhost:5000/recipes/trending');
+          if(!response.ok){
+            throw new Error("Failed to Fetch Data");
+          }
+          console.log(response)
+          const recipe = await response.json();
+          
           setData(prevRecipes => [...prevRecipes, recipe])
 
-        //}
-        //catch(error){
-          //console.error("Could not fetch Recipe", error);
-        //}
+        }
+        catch(error){
+          console.error("Could not fetch Recipe", error);
+        }
       };
       for(let i = 0; i < 9; i++){
         fetchRandom();
@@ -92,7 +84,7 @@ function HomePage(){
     
     <div className="center-section">
         <button className="account-options" onClick={() => changeURL('/loginpage')}>Sign In</button>
-        <button className="account-options">Sign Out</button>
+        <button className="account-options" onClick={() => logout()}>Sign Out</button>
         <button className="account-options" onClick={() => changeURL('/createuser')}>Register</button>
         <div className="browse-panel">
           {data.map((recipe, index) => (
@@ -129,7 +121,7 @@ function LoginPage(){
     const username = event.target.username.value;
     const password = event.target.password.value;
     event.preventDefault();
-    fetch('/login', {
+    fetch('http://localhost:5000/login', {
       method:'POST',
       headers:{'content-type':'application/json'},
       body:JSON.stringify({username, password})
@@ -138,10 +130,11 @@ function LoginPage(){
     .then(response => response.json())
     .then(data => {
       console.log('successful login');
-      data.localStorage.setItem('recipe-manager-token', data.access_token)
+      localStorage.setItem('recipe-manager-token', data.access_token)
+      changeURL('/')
     })
     .catch((error) => {
-      console.error('Error when Logging in');
+      console.error('Error when Logging in',error);
     });
   }
 
@@ -161,10 +154,9 @@ function LoginPage(){
         <input className='login-input' id='password' type="password" required></input>
       
       </div>
+      <button className="login-button" type='submit'>Login</button>
       </form>
-    <div className="button-wrapper">
-            <button className="login-button" type='submit'>Login</button>
-    </div>
+      
   </div>
 </body>
   )
@@ -176,7 +168,7 @@ function RegUser(){
     event.preventDefault();
     const username = event.target.username.value
     const password = event.target.password.value
-    fetch('/register', {
+    fetch('http://localhost:5000/register', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -208,10 +200,10 @@ function RegUser(){
         <input className='login-input' id='password' type="password" required></input>
       
       </div>
+      <button className="login-button" type='submit'>Register</button>
       </form>
-    <div className="button-wrapper">
-            <button className="login-button" type='submit'>Register</button>
-    </div>
+
+            
   </div>
 
   )
@@ -223,7 +215,7 @@ function ViewPage(){
   useEffect(() => {
     const fetchRecipe = async () => {
       try{
-        const response = await fetch('/recipes/single/' + recipeId);
+        const response = await fetch('http://localhost:5000/recipes/single/' + recipeId);
         if(!response.ok){
           throw new Error("Failed to Fetch Data");
         }
@@ -241,6 +233,8 @@ function ViewPage(){
   const changeURL = (url) => {
     window.location.href = url;
   };
+
+  
 
   return(
     <body>
@@ -263,6 +257,7 @@ function ViewPage(){
             <div>
                 <button className="view-panel-top">Save</button>
                 <button className="view-panel-top">Delete</button>
+                <button className ="view-panel-top">Create New</button>
             </div>
                 
             <div>
@@ -327,7 +322,7 @@ function MyRecipes(){
   useEffect(() => {
       const fetchRandom = async () => {
         //try{
-          //const response = await fetch('/recipes/user/<username>');
+          //const response = await fetch('http://localhost:5000/recipes/user/<username>');
           //if(!response.ok){
             //throw new Error("Failed to Fetch Data");
           //}
@@ -344,6 +339,31 @@ function MyRecipes(){
       }
 
     },[]);
+    function createNew(event){
+      event.preventDefault();
+      fetch('http://localhost:5000/recipes/user/' + decodeToken(localStorage.getItem('recipe-manager-token')).sub, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          "title": "",
+          "ingredients": [],
+          "directions": "",
+          "description": "",
+          "keywords": []
+      })
+      })
+      .then(response => response.json())
+      .then(data => {
+        changeURL('/view/'+response.recipe_id)
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+      });
+  
+    }
+
 
   return (
     
@@ -363,6 +383,11 @@ function MyRecipes(){
         <button className="account-options">Sign Out</button>
         <button className="account-options" onClick={() => changeURL('/createuser')}>Register</button>
         <div className="browse-panel">
+        <div>
+          <div>
+                <button className ="view-panel-top" onClick={createNew}>Create New</button>
+                </div>
+            
            <div>
                <div className="random-shown">RECIPE 1</div>
                <div className="random-shown">RECIPE 2</div>
@@ -380,6 +405,7 @@ function MyRecipes(){
                <div className="random-shown">RECIPE 9</div>
                
            </div>
+           </div>
         </div>
     </div>
     
@@ -392,7 +418,7 @@ function MyFavorites(){
   useEffect(() => {
       const fetchRandom = async () => {
         //try{
-          //const response = await fetch('/recipes/favorites/<username>');
+          //const response = await fetch('http://localhost:5000/recipes/favorites/<username>');
           //if(!response.ok){
             //throw new Error("Failed to Fetch Data");
           //}
