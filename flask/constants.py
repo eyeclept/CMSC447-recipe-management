@@ -1,0 +1,6 @@
+RECIPE_ID = "recipe_id"
+USERNAME = "username"
+RATING = "rating"
+PICTURE = "picture"
+RECIPE = "recipe"
+QUERY = "query"

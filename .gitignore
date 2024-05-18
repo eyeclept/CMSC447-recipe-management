@@ -1,3 +1,6 @@
+__pycache__/
+*.csv
+env/
 password.txt
 http_ca.crt
 password.txt
