@@ -71,6 +71,11 @@ input[type=text]{
     width:60vw;
     height:5vh;
 }
+input[type=password]{
+    margin-top:2vh;
+    width:60vw;
+    height:5vh;
+}
 h2{
     margin-top: 0vh;
     height: 10vh;
