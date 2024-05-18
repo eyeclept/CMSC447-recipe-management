@@ -13,6 +13,11 @@ from elastic import *
 
 api = Api(app)
 
+default_creds = {
+    "username": "",
+    "password": ""
+}
+
 @app.route("/")
 def hello_world():
     user = db.session.execute(db.select(User))
@@ -33,9 +38,6 @@ def get_all_recipe():
         for row in r:
             recipes.append(str(row))
 
-        tables = conn.execute(text("SELECT name FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%';"))
-        for row in tables:
-            recipes.append(str(row))
         return recipes
 
 @app.route("/init")
@@ -53,7 +55,8 @@ def init():
         existing_user = User.query.filter_by(username='default').first()
         if existing_user is None:
             # Create the default user
-            new_user = User(username='default', password='default', is_admin=False)   
+            hashed_password = bcrypt.generate_password_hash(default_creds["password"]).decode('utf-8')
+            new_user = User(username=default_creds["username"], password=hashed_password, is_admin=True)   
             # Add the user to the database session
             db.session.add(new_user) 
             db.session.commit()
@@ -94,4 +97,7 @@ api.add_resource(OwnRecipes, "/recipes/user/<username>")
 api.add_resource(RateRecipe, "/recipes/rate")
 
 if __name__ == '__main__':
+    import sys
+    default_creds["username"] = sys.argv[1]
+    default_creds["password"] = sys.argv[2]
     app.run(debug=True)

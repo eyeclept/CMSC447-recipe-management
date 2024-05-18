@@ -3,6 +3,7 @@ from flask_restful import Resource, output_json
 from webargs import fields
 from webargs.flaskparser import use_kwargs
 from sqlalchemy import update, text
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from app_setup import *
 from constants import *
 from elastic import *
@@ -45,12 +46,15 @@ class SearchRecipes(Resource):
 
 class FavoriteRecipes(Resource):
 
+    @jwt_required()
     def get(self, username):
         """
         get a list of the ids of a user's favorite recipes
         """
         user:User = db.session.get(User, username)
-
+        current_user = get_jwt_identity()
+        if current_user != username and not user.is_admin:
+            return {"message": "You do not have permission to view this"}, 401
         res = []
         for r in user.favorites:
             id = r.recipe_id
@@ -61,10 +65,16 @@ class FavoriteRecipes(Resource):
         return res
 
     @use_kwargs({RECIPE_ID: fields.String(required=True)}, location="query")
+    @jwt_required()
     def put(self, username, **kwargs):
         """
         add a recipe to a user's favorites
         """
+        user:User = db.session.get(User, username)
+        current_user = get_jwt_identity()
+        if current_user != username and not user.is_admin:
+            return {"message": "You do not have permission to view this"}, 401
+        
         if db.session.get(Favorite, {"username": username, "recipe_id": kwargs[RECIPE_ID]}):
             return 200
         
@@ -80,10 +90,16 @@ class FavoriteRecipes(Resource):
         return 200
 
     @use_kwargs({RECIPE_ID: fields.String(required=True)}, location="query")
+    @jwt_required()
     def delete(self, username, **kwargs):
         """
         remove a recipe from a user's favorites
         """
+        user:User = db.session.get(User, username)
+        current_user = get_jwt_identity()
+        if current_user != username and not user.is_admin:
+            return {"message": "You do not have permission to delete this"}, 401
+        
         fav = db.session.get(Favorite, {USERNAME:username, RECIPE_ID:kwargs[RECIPE_ID]})
         db.session.delete(fav)
         db.session.commit()
@@ -93,12 +109,16 @@ class FavoriteRecipes(Resource):
 
 class OwnRecipes(Resource):
 
+    @jwt_required()
     def get(self, username):
         """
         get all ids of recipes created by user
         """
         user:User = db.session.get(User, username)
-
+        current_user = get_jwt_identity()
+        if current_user != username and not user.is_admin:
+            return {"message": "You do not have permission to delete this"}, 401
+        
         results = []
         for r in user.recipes:
             id = r.recipe_id
@@ -108,10 +128,15 @@ class OwnRecipes(Resource):
                 continue        
         return results
 
+    @jwt_required()
     def put(self, username):
         """
         create a recipe
         """
+        user:User = db.session.get(User, username)
+        current_user = get_jwt_identity()
+        if current_user != username and not user.is_admin:
+            return {"message": "You do not have permission to delete this"}, 401
         json_data:dict = request.get_json(force=True)
 
         # if an id is passed, then the recipe must exist already
@@ -140,10 +165,16 @@ class OwnRecipes(Resource):
             return {"status": "inserted", "recipe_id": id}, 200
     
     @use_kwargs({RECIPE_ID: fields.String(required=True)}, location="query")
+    @jwt_required()
     def delete(self, username, **kwargs):
         """
         delete a recipe
         """
+        user:User = db.session.get(User, username)
+        current_user = get_jwt_identity()
+        if current_user != username and not user.is_admin:
+            return {"message": "You do not have permission to delete this"}, 401
+        
         recipe = db.session.get(Recipe, kwargs[RECIPE_ID])
         if not recipe:
             return 200
@@ -158,7 +189,7 @@ class OwnRecipes(Resource):
         db.session.commit()
         return 200
 
-
+# Not implemented at time of project completion
 class RateRecipe(Resource):
     review_fields = {
         RECIPE_ID: fields.String(required=True),
