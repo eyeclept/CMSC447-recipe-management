@@ -1,0 +1,12 @@
+Flask==2.3.2
+Flask-SQLAlchemy==3.0.3
+Flask-JWT-Extended
+flask-bcrypt
+flask-restful
+pymysql
+flask-restful
+sqlalchemy
+sqlalchemy-utils
+webargs
+elasticsearch
+pandas
