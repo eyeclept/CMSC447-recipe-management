@@ -4,6 +4,7 @@ version: '3.10'
 services:
   flask:
     image: flask
+    container_name: flaskapp
 #    build: .
     ports:
       - "5000:5000"
@@ -19,17 +20,11 @@ services:
       - MYSQL_DATABASE=projectdb447
       - MYSQL_USER=projectuser
       - MYSQL_PASSWORD=changeme
-    ports:
-      - "3306:
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.4.3
-    container_name: elasticsearch
-    environment:
-      - discovery.type=single-node
-    ports:
-      - "9200:9200"
-      - "9300:9300"
     volumes:
-      - es_data:/usr/share/elasticsearch/data
+      - db_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+   
 volumes:
-  es_data:
+  db_data:
+

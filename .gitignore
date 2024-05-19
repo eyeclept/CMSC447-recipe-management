@@ -1,3 +1,4 @@
-password.txt
+*.txt
+*.cert
 poetry.lock
 pyproject.toml
