@@ -7,3 +7,4 @@ password.txt
 __pycache__/
 *.csv
 env/
+node_modules/
