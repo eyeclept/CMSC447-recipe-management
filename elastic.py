@@ -12,13 +12,24 @@ from elasticsearch import Elasticsearch
 import pandas as pd
 import time  # To allow indexing to complete before searching
 
+def getPasswordFromFile(file_path="password.txt"):
+    """
+    Reads the first line from the given file and returns it as a password.
+    """
+    with open(file_path, 'r') as file:
+        password = file.readline().strip()
+    return password
+
+
+password = getPasswordFromFile()
 # Setup connection to Elasticsearch on Docker
 BASE_ELASTIC_INFO = Elasticsearch(
     hosts=["https://localhost:9200"],
-    basic_auth=('elastic', 'changeme'),
+    basic_auth=('elastic', password),
     ca_certs="./ca.crt",
     verify_certs=False
 )
+
 
 def indexDataFromCsv(csvFile, indexName = "recipes", es = BASE_ELASTIC_INFO):
     """
