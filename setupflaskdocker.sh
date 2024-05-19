@@ -11,4 +11,4 @@ cd ..
 docker-compose up
 #pull stuff for flask
 docker exec -it elasticsearch /usr/share/elasticsearch/bin/elasticsearch-reset-password -b -u elastic
-docker cp elasticsearch:/usr/share/elasticsearch/config/certs/http_ca.crt .
+docker cp elasticsearch:/usr/share/elasticsearch/config/certs/http_ca.crt .ca.crt
