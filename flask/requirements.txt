@@ -10,3 +10,4 @@ sqlalchemy-utils
 webargs
 elasticsearch
 pandas
+flask-cors

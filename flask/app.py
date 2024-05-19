@@ -51,7 +51,7 @@ def init():
         db.create_all()
 
         # Check if the default user already exists
-        existing_user = User.query.filter_by(username='default').first()
+        existing_user = User.query.filter_by(username=default_creds["username"]).first()
         if existing_user is None:
             # Create the default user
             hashed_password = bcrypt.generate_password_hash(
@@ -86,7 +86,7 @@ def init():
                     id = insert_document(doc)
                     # The default username for pre-existing recipes is 'default', there are no associated pictures
                     recipe = Recipe(recipe_id=id,
-                                    username='default',
+                                    username=default_creds["username"],
                                     picture=None)
                     db.session.add(recipe)
                     count += 1
@@ -105,4 +105,4 @@ if __name__ == '__main__':
     import sys
     default_creds["username"] = sys.argv[1]
     default_creds["password"] = sys.argv[2]
-    app.run(debug=True)
+    app.run()

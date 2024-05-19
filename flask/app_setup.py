@@ -4,6 +4,7 @@ from flask_jwt_extended import JWTManager
 from flask_bcrypt import Bcrypt
 from datetime import timedelta
 from constants import *
+from flask_cors import CORS
 
 app = Flask(__name__)
 app.config[
@@ -15,7 +16,7 @@ app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
-
+CORS(app)
 
 class User(db.Model):
     username = db.Column(db.String(255), primary_key=True, nullable=False)

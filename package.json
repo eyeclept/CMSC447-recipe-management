@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "jsonwebtoken": "^9.0.2",
+    "registry.npmjs.org": "^1.0.1"
+  }
+}

@@ -1,4 +1,4 @@
-from flask_jwt_extended import create_access_token, jwt_required
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from flask import request, jsonify
 
 from app_setup import *
@@ -72,7 +72,11 @@ def logout():
     # For JWT, logging out is handled on the client side by deleting the token.
     return jsonify({'message': 'Logged out successfully.'}), 200
 
-
+@app.route('/user/me', methods=['GET'])
+@jwt_required()
+def get_username():
+    username = get_jwt_identity()
+    return {"username": username}, 200
 """ 
 Below is an example of using a JWT to get the logged in user's recipes from the recipe db
 React frontend will have to check if a token doesn't exist in local storage before calling this
