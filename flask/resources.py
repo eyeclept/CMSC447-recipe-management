@@ -114,9 +114,9 @@ class OwnRecipes(Resource):
         """
         get all ids of recipes created by user
         """
-        user:User = db.session.get(User, username)
         current_user = get_jwt_identity()
-        if current_user != username and not user.is_admin:
+        user:User = db.session.get(User, current_user)
+        if  username != current_user and not user.is_admin:
             return {"message": "You do not have permission to delete this"}, 401
         
         results = []
@@ -133,10 +133,10 @@ class OwnRecipes(Resource):
         """
         create a recipe
         """
-        user:User = db.session.get(User, username)
         current_user = get_jwt_identity()
-        if current_user != username and not user.is_admin:
-            return {"message": "You do not have permission to delete this"}, 401
+        user:User = db.session.get(User, current_user)
+        if  username != current_user and not user.is_admin:
+            return {"message": "You do not have permission to Edit this"}, 401
         json_data:dict = request.get_json(force=True)
 
         # if an id is passed, then the recipe must exist already
@@ -171,9 +171,9 @@ class OwnRecipes(Resource):
         """
         delete a recipe
         """
-        user:User = db.session.get(User, username)
         current_user = get_jwt_identity()
-        if current_user != username and not user.is_admin:
+        user:User = db.session.get(User, current_user)
+        if  username != current_user and not user.is_admin:
             return {"message": "You do not have permission to delete this"}, 401
         
         recipe = db.session.get(Recipe, kwargs[RECIPE_ID])
