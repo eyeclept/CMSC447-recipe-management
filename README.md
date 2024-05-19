@@ -22,3 +22,11 @@ At this point, you are ready to begin development
 ## 3: Running tests
 
 1. Run `python tests/backend_tests.py`. You will be prompted for the password of the default user. This is essentially logging you into the system under that user, just directly instead of via the front end.
+
+## Front End
+
+0. ensure both node.js and npm are installed
+1. open a command prompt and navigate to /recipe-manager
+3. run the command `npm run dev`, this will start the react app up, but not open it
+4. Either click the pop-up that might appear to open in browser, otherwise enter `o` in the command prompt
+5. this opens to the home page where all functions can be found
