@@ -10,6 +10,7 @@ services:
       - "5000:5000"
     volumes:
       - ./flaskapp:/app
+      - ./sharedData:/app/sharedData
     environment:
       - FLASK_ENV=development
   mariadb:

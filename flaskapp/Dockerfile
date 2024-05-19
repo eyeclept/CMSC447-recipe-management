@@ -6,6 +6,8 @@ WORKDIR /app
 
 COPY requirements.txt .
 
+RUN mkdir /app/sharedData
+
 RUN pip install -r requirements.txt
 
 COPY . .
