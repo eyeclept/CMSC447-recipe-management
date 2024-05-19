@@ -153,6 +153,7 @@ class OwnRecipes(Resource):
                 )
                 db.session.commit()
             res = update_document(json_data.pop(RECIPE_ID), json_data)
+            refresh_index()
             return {"status": res}, 200
         else:
             id = insert_document(json_data)
@@ -161,7 +162,7 @@ class OwnRecipes(Resource):
             recipe = Recipe(recipe_id=id, username=username, picture=picture)
             db.session.add(recipe)
             db.session.commit()
-
+            refresh_index()
             return {"status": "inserted", "recipe_id": id}, 200
     
     @use_kwargs({RECIPE_ID: fields.String(required=True)}, location="query")
