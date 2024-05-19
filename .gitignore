@@ -1,4 +1,7 @@
 *.txt
+*.cert
+poetry.lock
+pyproject.toml
 *.crt
 env/
 __pycache__/

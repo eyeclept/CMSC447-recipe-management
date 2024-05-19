@@ -1,0 +1,31 @@
+# docker-compose.yml
+
+version: '3.10'
+services:
+  flask:
+    image: flask
+    container_name: flaskapp
+#    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./flaskapp:/app
+      - ./sharedData:/app/sharedData
+    environment:
+      - FLASK_ENV=development
+  mariadb:
+    image: mariadb
+    container_name: mariadb
+    environment:
+      - MYSQL_ROOT_PASSWORD=changeme
+      - MYSQL_DATABASE=projectdb447
+      - MYSQL_USER=projectuser
+      - MYSQL_PASSWORD=changeme
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+   
+volumes:
+  db_data:
+
