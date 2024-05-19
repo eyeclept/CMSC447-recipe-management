@@ -54,8 +54,6 @@ function App() {
         <Route path='/myfavorites' element={<MyFavorites />} />
         <Route path='/createuser' element={<RegUser />} />
       </Routes>
-    
-    
   );
 }
 
@@ -63,7 +61,7 @@ function HomePage(){
 /*{data.map((recipe, index) => (
             <div key={index} className="random-shown">
               {recipe.name} */
-
+  
   const nav = useNavigate()
   const [data, setData] = useState([]);
   useEffect(() => {
@@ -90,10 +88,12 @@ function HomePage(){
 
     },[]);
 
+
   return (
     
     <body>
     <div className="left-section">
+      
 
         <div className="option-box">
             <button className="option-buttons" onClick={() => changeURL('/')}>Home</button>
@@ -124,7 +124,9 @@ function HomePage(){
 function LoginPage(){
   function submitLogin(event){
     const username = event.target.username.value;
+    //console.log(username)
     const password = event.target.password.value;
+    //console.log(password)
     event.preventDefault();
     fetch('http://localhost:5000/login', {
       method:'POST',
@@ -147,7 +149,7 @@ function LoginPage(){
   return(
     <body>
   <div className="login-page">
-    <div className="website-name">Website Name (TM)</div>
+    <div className="website-name">FindMyRecipe (TM)</div>
     
     <form onSubmit={submitLogin}>
       <div>
@@ -193,7 +195,7 @@ function RegUser(){
   return(
     
   <div className="login-page">
-    <div className="website-name">Website Name (TM)</div>
+    <div className="website-name">FindMyRecipe (TM)</div>
     
     <form onSubmit={createUser}>
       <div>
@@ -270,7 +272,7 @@ function ViewPage(){
       body: JSON.stringify({ 
         "title": document.getElementById('title').innerText,
         "ingredients": document.getElementById('ing').innerText,
-        "directions": [],
+        "directions": document.getElementById('direc').innerText,
         "description": document.getElementById('desc').innerText,
         "keywords": [],
         "recipe_id": recipeId.get('recipe')
@@ -345,10 +347,11 @@ function ViewPage(){
                 <button  className="view-panel-top" type='submit' onClick={saveChanges}>Save</button>
                 <button className='view-panel-top' type='submit' onClick={delRecipe}>Delete</button>
                 <button className='view-panel-top' onClick={favRecipe}>Favorite</button>
+                <div  onInput={handleInput} id='title'contentEditable='true' className='view-panel-title'suppressContentEditableWarning>{page.title}</div>
             </div>
                 
             <div>
-                <div onInput={handleInput} contentEditable='true' id='title' suppressContentEditableWarning className="view-panel-middle-left">{page.title}</div>
+                <div onInput={handleInput} contentEditable='true' id='direc' suppressContentEditableWarning className="view-panel-middle-left">{page.directions}</div>
                 <div  onInput={handleInput} contentEditable='true' id='ing' suppressContentEditableWarning className="view-panel-middle-right">{page.ingredients}</div>
             </div>
             

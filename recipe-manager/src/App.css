@@ -136,8 +136,10 @@ h2{
     text-align:center;
     margin-top:10vh;
     color: black;
-
-
+    overflow-y: scroll;
+}
+.view-panel-title{
+    color:black;
 }
 .view-panel-middle-right{
     width:15vw;
@@ -147,6 +149,7 @@ h2{
     text-align:center;
     margin-top:10vh;
     color: black;
+    overflow-y: scroll;
 
 
 }
@@ -162,6 +165,7 @@ h2{
     height:45vh;
     background-color:lightgrey;
     text-wrap:wrap;
+    overflow-y: scroll;
 
 </style>
 </head>
