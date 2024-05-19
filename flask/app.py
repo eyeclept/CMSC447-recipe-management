@@ -105,4 +105,4 @@ if __name__ == '__main__':
     import sys
     default_creds["username"] = sys.argv[1]
     default_creds["password"] = sys.argv[2]
-    app.run(debug=True)
+    app.run()
