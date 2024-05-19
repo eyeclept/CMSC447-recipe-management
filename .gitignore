@@ -1,2 +1,7 @@
 *.txt
 *.crt
+env/
+__pycache__/
+*.csv
+env/
+node_modules/
