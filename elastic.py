@@ -12,7 +12,7 @@ from elasticsearch import Elasticsearch
 import pandas as pd
 import time  # To allow indexing to complete before searching
 
-def getPasswordFromFile(file_path="password.txt"):
+def getPasswordFromFile(file_path="./sharedData/password.txt"):
     """
     Reads the first line from the given file and returns it as a password.
     """
@@ -26,7 +26,7 @@ password = getPasswordFromFile()
 BASE_ELASTIC_INFO = Elasticsearch(
     hosts=["https://localhost:9200"],
     basic_auth=('elastic', password),
-    ca_certs="./ca.crt",
+    ca_certs="./sharedData/ca.crt",
     verify_certs=False
 )
 
