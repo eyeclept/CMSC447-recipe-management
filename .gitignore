@@ -1,9 +1,6 @@
-__pycache__/
-*.csv
+*.txt
+*.crt
 env/
-password.txt
-http_ca.crt
-password.txt
 __pycache__/
 *.csv
 env/
